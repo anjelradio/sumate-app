@@ -22,9 +22,18 @@ export default function HomePage() {
             }}
           />
           {/* Título de la marca superpuesto */}
-          <div className="absolute top-14 left-0 right-0 flex items-center justify-center z-10">
-            <span className="text-[34px] font-extrabold text-white tracking-tight drop-shadow-sm">
-              Súmate
+          <div className="absolute top-14 left-0 right-0 flex items-center justify-center gap-2.5 z-10">
+            <Image
+              src="/assets/icons/white-app-icon.webp"
+              alt="Logo Súmate"
+              width={46}
+              height={46}
+              priority
+              unoptimized
+              className="w-[46px] h-[46px] object-contain shrink-0"
+            />
+            <span className="text-[34px] font-extrabold text-white tracking-tight lowercase">
+              súmate
             </span>
           </div>
         </div>

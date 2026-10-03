@@ -31,7 +31,7 @@ export function AppHeader() {
     }
     appToast.info("Cerrando sesión. ¡Hasta luego!");
     setOpen(false);
-    router.replace("/auth/login");
+    router.replace("/");
   };
 
   const user = session?.user;
