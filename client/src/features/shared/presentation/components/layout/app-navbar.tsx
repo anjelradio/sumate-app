@@ -32,12 +32,12 @@ export function AppNavbar() {
                 : "border-transparent text-zinc-600 font-medium hover:text-black"
             }`}
           >
-            <div className="relative w-[23px] h-[23px] mb-1 shrink-0">
+            <div className="relative w-[26px] h-[26px] mb-1 shrink-0">
               <Image
                 src={item.iconUrl}
                 alt=""
                 fill
-                sizes="23px"
+                sizes="26px"
                 className="object-contain"
               />
             </div>
