@@ -12,10 +12,16 @@ type HomePageProps = {
 };
 
 async function EventsListContent({ scope }: { scope: EventScope }) {
+  let events = null;
+  let hasError = false;
+
   try {
-    const events = await getEventsQuery(scope);
-    return <EventsFeed events={events} scope={scope} />;
-  } catch (err) {
+    events = await getEventsQuery(scope);
+  } catch {
+    hasError = true;
+  }
+
+  if (hasError || !events) {
     return (
       <div className="py-12 px-4 text-center">
         <p className="text-sm text-red-500 font-medium">
@@ -24,6 +30,8 @@ async function EventsListContent({ scope }: { scope: EventScope }) {
       </div>
     );
   }
+
+  return <EventsFeed events={events} scope={scope} />;
 }
 
 export default async function HomePage({ searchParams }: HomePageProps) {
