@@ -20,11 +20,7 @@ export function AuthMobileHeader({
   const router = useRouter();
 
   const handleBack = () => {
-    if (typeof window !== "undefined" && window.history.length > 1) {
-      router.back();
-    } else {
-      router.push(fallbackHref);
-    }
+    router.replace(fallbackHref || "/");
   };
 
   const IconComponent = icon === "close" ? X : ArrowLeft;

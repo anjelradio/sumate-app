@@ -6,7 +6,7 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen w-full flex flex-col justify-between bg-white text-zinc-900 px-6 py-5 antialiased selection:bg-[#6355DE] selection:text-white">
       <div className="w-full">
-        <AuthMobileHeader fallbackHref="/auth/login" />
+        <AuthMobileHeader fallbackHref="/" />
 
         <section className="mt-4 mb-8">
           <h1 className="text-[28px] font-extrabold text-zinc-900 tracking-tight leading-tight">

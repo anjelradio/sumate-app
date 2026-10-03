@@ -24,6 +24,7 @@ export function AppNavbar() {
             key={item.id}
             href={item.href}
             role="tab"
+            prefetch={true}
             aria-selected={isActive}
             className={`flex-1 flex flex-col items-center justify-center pt-2.5 pb-2 transition-all shrink-0 min-w-[70px] border-b-2 ${
               isActive
@@ -31,12 +32,12 @@ export function AppNavbar() {
                 : "border-transparent text-zinc-600 font-medium hover:text-black"
             }`}
           >
-            <div className="relative w-5 h-5 mb-1 shrink-0">
+            <div className="relative w-[23px] h-[23px] mb-1 shrink-0">
               <Image
                 src={item.iconUrl}
                 alt=""
                 fill
-                sizes="20px"
+                sizes="23px"
                 className="object-contain"
               />
             </div>

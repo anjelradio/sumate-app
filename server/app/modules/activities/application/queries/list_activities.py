@@ -1,16 +1,11 @@
-"""
-app/modules/activities/application/queries/list_activities.py
-
-Consulta para listar actividades según ámbito (propias del usuario o de otros miembros).
-Devuelve DTOs inmutables de Python puro.
-"""
-
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from app.modules.activities.domain.repositories.activity_repository import ActivityRepository
+from app.modules.activities.domain.repositories.activity_repository import (
+    ActivityRepository,
+)
 
 
 @dataclass(frozen=True, slots=True)

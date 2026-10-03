@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
@@ -33,26 +35,39 @@ interface SocialSignInButtonsProps {
 
 export default function SocialSignInButtons({
   className,
-  callbackURL = "/home",
+  callbackURL = "/explore",
 }: SocialSignInButtonsProps) {
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleGoogleSignIn = async () => {
-    await authClient.signIn.social({
-      provider: "google",
-      callbackURL,
-      errorCallbackURL: "/auth/login?error=social",
-    });
+    if (isLoading) return;
+    setIsLoading(true);
+    try {
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL,
+        errorCallbackURL: "/auth/login?error=social",
+      });
+    } catch {
+      setIsLoading(false);
+    }
   };
 
   return (
     <button
       type="button"
       onClick={handleGoogleSignIn}
+      disabled={isLoading}
       className={cn(
-        "w-full h-[52px] bg-white border border-[#E2E4E9] rounded-full flex items-center justify-center gap-3 shadow-[0_2px_4px_rgba(0,0,0,0.04)] hover:bg-gray-50 active:scale-[0.98] transition cursor-pointer select-none",
+        "w-full h-[52px] bg-white border border-[#E2E4E9] rounded-full flex items-center justify-center gap-3 shadow-[0_2px_4px_rgba(0,0,0,0.04)] hover:bg-gray-50 active:scale-[0.98] transition cursor-pointer select-none disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100",
         className
       )}
     >
-      <GoogleIcon />
+      {isLoading ? (
+        <Loader2 className="h-5 w-5 animate-spin text-[#6355DE] shrink-0" />
+      ) : (
+        <GoogleIcon />
+      )}
       <span className="text-[15px] font-semibold text-[#2D3139]">
         Continuar con Google
       </span>

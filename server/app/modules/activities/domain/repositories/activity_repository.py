@@ -1,10 +1,3 @@
-"""
-app/modules/activities/domain/repositories/activity_repository.py
-
-Contrato abstracto del repositorio de actividades (Domain Repository).
-Sin prefijo 'I' según directivas constitucionales.
-"""
-
 from abc import ABC, abstractmethod
 from uuid import UUID
 

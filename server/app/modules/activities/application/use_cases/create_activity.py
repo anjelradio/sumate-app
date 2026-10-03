@@ -1,16 +1,11 @@
-"""
-app/modules/activities/application/use_cases/create_activity.py
-
-Caso de uso: Crear una nueva actividad solidaria.
-Orquesta la validación del dominio, la persistencia en el repositorio y la confirmación transaccional (UoW).
-"""
-
 from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
 from app.modules.activities.domain.entities.activity import Activity
-from app.modules.activities.domain.repositories.activity_repository import ActivityRepository
+from app.modules.activities.domain.repositories.activity_repository import (
+    ActivityRepository,
+)
 from app.shared.application.ports import UnitOfWork
 
 

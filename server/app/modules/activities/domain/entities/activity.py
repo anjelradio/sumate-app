@@ -1,11 +1,5 @@
-"""
-app/modules/activities/domain/entities/activity.py
-
-Entidad pura de dominio Actividad.
-Sin dependencias de frameworks ni Value Objects.
-"""
-
 from __future__ import annotations
+
 from datetime import datetime
 from uuid import UUID, uuid4
 

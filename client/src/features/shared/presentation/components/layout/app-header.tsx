@@ -45,16 +45,14 @@ export function AppHeader() {
       data-purpose="app-header"
     >
       <div className="flex items-center gap-3" data-purpose="search-and-profile">
-        {/* Buscador simulado como botón */}
+        {/* Buscador simulado como botón centrado */}
         <button
           type="button"
           aria-label="Buscar actividades"
-          className="relative flex-1 flex items-center pl-10 pr-4 py-2 bg-white border border-slate-200/80 rounded-2xl text-sm text-slate-400 shadow-sm hover:border-slate-300 transition-all text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-black/10"
+          className="relative flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-200/80 rounded-2xl text-sm text-slate-400 shadow-sm hover:border-slate-300 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-black/10"
         >
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-            <Search className="w-5 h-5" />
-          </div>
-          <span className="truncate">Buscar actividades o causas solidarias...</span>
+          <Search className="w-4 h-4 text-slate-400 shrink-0" />
+          <span className="truncate font-normal">Buscar actividades</span>
         </button>
 
         {/* Popover con Avatar y Menú de Perfil */}
@@ -72,6 +70,7 @@ export function AppHeader() {
                   src={user.image}
                   alt={user.name ?? "Foto de perfil"}
                   fill
+                  unoptimized
                   className="object-cover"
                 />
               ) : (
@@ -89,18 +88,23 @@ export function AppHeader() {
           >
             {/* Cabecera del Popover con Súmate y botón cerrar */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 mb-3">
-              <div className="flex items-center gap-1.5">
-                <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center text-white text-xs font-bold">
-                  S
+              <div className="flex items-center gap-2">
+                <div className="relative w-5 h-5 rounded-md overflow-hidden shrink-0">
+                  <Image
+                    src="/assets/sumate-app-icon.png"
+                    alt="Súmate"
+                    fill
+                    className="object-cover"
+                  />
                 </div>
-                <span className="font-bold text-sm text-black tracking-tight">
+                <span className="font-bold text-sm text-[#6355de] tracking-tight">
                   Súmate
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="text-slate-400 hover:text-slate-600 focus:outline-none p-1 rounded-md transition"
+                className="text-slate-400 hover:text-slate-600 focus:outline-none p-1 rounded-md transition cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -114,6 +118,7 @@ export function AppHeader() {
                     src={user.image}
                     alt={user.name ?? "Avatar"}
                     fill
+                    unoptimized
                     className="object-cover"
                   />
                 ) : (

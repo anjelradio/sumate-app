@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Calendar } from "lucide-react";
 import type { ActivityListItem } from "@/features/activities/domain/entities/activity.entity";
 
 type ActivityCardProps = {
@@ -7,20 +8,28 @@ type ActivityCardProps = {
 
 function formatActivityDate(dateString: string): string {
   try {
-    const d = new Date(dateString);
+    // Si no contiene indicador de timezone ('Z' o '+' o '-'), asegurar UTC para evitar desfases
+    const isoString =
+      dateString.includes("Z") || dateString.includes("+") || dateString.includes("-", 10)
+        ? dateString
+        : `${dateString}Z`;
+
+    const d = new Date(isoString);
     if (isNaN(d.getTime())) return dateString;
 
-    const formatted = d.toLocaleDateString("es-ES", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
+    // Obtener componentes por separado en hora boliviana (La Paz, UTC-4)
+    const weekday = d.toLocaleDateString("es-BO", { timeZone: "America/La_Paz", weekday: "short" });
+    const day = d.toLocaleDateString("es-BO", { timeZone: "America/La_Paz", day: "numeric" });
+    const month = d.toLocaleDateString("es-BO", { timeZone: "America/La_Paz", month: "short" });
+    const time = d.toLocaleTimeString("es-BO", {
+      timeZone: "America/La_Paz",
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
     });
 
-    // Capitalizar primera letra (ej. "Sáb, 15 oct • 8:30 AM")
-    return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+    const capWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1);
+    return `${capWeekday}, ${day} ${month} • ${time}`;
   } catch {
     return dateString;
   }
@@ -52,16 +61,8 @@ export function ActivityCard({ activity }: ActivityCardProps) {
           {activity.name}
         </h2>
 
-        <p className="mt-1.5 text-xs font-semibold text-zinc-700 flex items-center gap-1.5">
-          <div className="relative w-3.5 h-3.5 shrink-0">
-            <Image
-              src="/assets/icons/date.webp"
-              alt=""
-              fill
-              sizes="14px"
-              className="object-contain"
-            />
-          </div>
+        <p className="mt-1.5 text-xs font-semibold text-[#6355de] flex items-center gap-1.5">
+          <Calendar className="w-3.5 h-3.5 text-[#6355de] shrink-0" />
           <span>{formattedDate}</span>
         </p>
 
