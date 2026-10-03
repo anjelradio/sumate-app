@@ -71,9 +71,9 @@
   --color-sidebar-ring: var(--sidebar-ring);
 
   /* Roles tipográficos cargados con next/font en styles/fonts.ts */
-  --font-headline: var(--app-font-headline);
-  --font-sans: var(--app-font-body);
-  --font-label: var(--app-font-label);
+  --font-headline: var(--app-font-sans);
+  --font-sans: var(--app-font-sans);
+  --font-label: var(--app-font-sans);
   --font-mono: var(--app-font-mono);
 
   --radius-sm: calc(var(--radius) * 0.6);

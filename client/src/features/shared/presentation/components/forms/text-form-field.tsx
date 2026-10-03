@@ -33,7 +33,7 @@ export default function TextFormField({
 
   return (
     <div className="space-y-2 w-full text-left">
-      <label htmlFor={id} className="block text-[15px] font-bold text-zinc-900 font-label">
+      <label htmlFor={id} className="block text-[15px] font-bold text-zinc-900">
         {label}
       </label>
       <div className="relative flex items-center">

@@ -1,22 +1,12 @@
-import { Hanken_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 
 /*
- * Roles tipográficos para toda la aplicación. app/theme.css los expone como
- * las utilidades Tailwind font-headline, font-sans y font-label.
+ * Plus Jakarta Sans como fuente principal para toda la aplicación
+ * (titulares, textos, labels y controles de formulario).
  */
-const headline = Hanken_Grotesk({
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--app-font-headline",
-});
-
-const body = Inter({
-  subsets: ["latin"],
-  variable: "--app-font-body",
-});
-
-const label = Inter({
-  subsets: ["latin"],
-  variable: "--app-font-label",
+  variable: "--app-font-sans",
 });
 
 const mono = JetBrains_Mono({
@@ -24,4 +14,4 @@ const mono = JetBrains_Mono({
   variable: "--app-font-mono",
 });
 
-export const appFontVariables = `${headline.variable} ${body.variable} ${label.variable} ${mono.variable}`;
+export const appFontVariables = `${plusJakartaSans.variable} ${mono.variable}`;

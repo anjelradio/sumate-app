@@ -68,7 +68,7 @@ export function CreateEventForm({ onSuccess }: CreateEventFormProps) {
     <form onSubmit={handleSubmit} className="space-y-5 text-left">
       {/* Slot de selección y previsualización de imagen */}
       <div className="space-y-2">
-        <label className="block text-[15px] font-bold text-zinc-900 font-label">
+        <label className="block text-[15px] font-bold text-zinc-900">
           Imagen del evento
         </label>
 
