@@ -17,4 +17,4 @@
 
 # ruff: noqa: F401
 
-from app.modules.events.infrastructure.persistence.models.event_model import EventModel
+from app.modules.activities.infrastructure.persistence.models.activity_model import ActivityModel

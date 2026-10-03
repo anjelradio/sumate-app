@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Súmate - Voluntariado y Causas Solidarias",
     short_name: "Súmate",
-    description: "Plataforma comunitaria para descubrir y organizar eventos de voluntariado.",
+    description: "Plataforma comunitaria para descubrir y organizar actividades de voluntariado.",
     start_url: "/",
     scope: "/",
     display: "standalone",

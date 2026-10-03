@@ -118,6 +118,6 @@ def health_check():
 # ==============================================================================
 # REGISTRO DE ROUTERS
 # ==============================================================================
-from app.modules.events.infrastructure.api.routers.event_router import router as event_router
+from app.modules.activities.infrastructure.api.routers.activity_router import router as activity_router
 
-app.include_router(event_router, prefix="/api")
+app.include_router(activity_router, prefix="/api")

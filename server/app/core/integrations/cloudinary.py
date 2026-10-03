@@ -2,7 +2,7 @@
 app/core/integrations/cloudinary.py
 
 Integración con el servicio Cloudinary para subida y almacenamiento de imágenes
-en la carpeta dedicada `sumate/events`.
+en la carpeta dedicada `sumate/activities`.
 """
 
 import logging
@@ -30,22 +30,22 @@ def configure_cloudinary() -> None:
         _is_configured = True
 
 
-def upload_event_image(file: BinaryIO | bytes, filename: str | None = None) -> str:
+def upload_activity_image(file: BinaryIO | bytes, filename: str | None = None) -> str:
     """
-    Sube un archivo de imagen a Cloudinary en la carpeta `sumate/events`.
+    Sube un archivo de imagen a Cloudinary en la carpeta `sumate/activities`.
 
     Retorna la URL segura (HTTPS) del recurso alojado.
     """
     configure_cloudinary()
 
     upload_options = {
-        "folder": "sumate/events",
+        "folder": "sumate/activities",
         "resource_type": "image",
     }
     if filename:
         upload_options["public_id_prefix"] = filename
 
-    logger.info("Subiendo imagen de evento a Cloudinary (folder: sumate/events)...")
+    logger.info("Subiendo imagen de actividad a Cloudinary (folder: sumate/activities)...")
     result = cloudinary.uploader.upload(file, **upload_options)
     secure_url = result.get("secure_url")
 

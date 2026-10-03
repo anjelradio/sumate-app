@@ -1,100 +1,146 @@
 "use client";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
 
-import { CircleUser, LogOut } from "lucide-react";
+import { useState } from "react";
+import Image from "next/image";
+import { Search, LogOut, X, CircleUser } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { appToast } from "../notifications/toast";
 import { useRouter } from "next/navigation";
 import { clearJWT } from "@/features/shared/infrastructure/http/jwt-manager";
-
-function UserEmailLoader() {
-  return (
-    <div className="flex items-center gap-3">
-      <Skeleton className="h-12 w-12 rounded-full" />
-      <div className="space-y-2">
-        <Skeleton className="h-4 w-62.5" />
-        <Skeleton className="h-4 w-50" />
-      </div>
-    </div>
-  );
-}
-
-function UserEmailInformation() {
-  const {
-    data: session,
-    isPending, //loading state
-    error, //error object
-  } = authClient.useSession();
-
-  if (isPending) return <UserEmailLoader />;
-
-  if (error) {
-    appToast.error(
-      "Error en la sesion",
-      "No hemos encontrado tu sesion actual.",
-    );
-    return <div>No se encontro una sesion</div>;
-  }
-
-  return (
-    <div className="flex items-center gap-3">
-      <CircleUser className="size-8 text-muted-foreground" />
-      <div className="hidden flex-col sm:flex">
-        <span className="text-sm font-medium leading-tight">
-          {session?.user.name}
-        </span>
-        <span className="text-xs text-muted-foreground">
-          {session?.user.email}
-        </span>
-      </div>
-    </div>
-  );
-}
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function AppHeader() {
   const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const { data: session, isPending } = authClient.useSession();
+
   const handleSignOut = async () => {
     clearJWT();
     const { error } = await authClient.signOut();
     if (error) {
       appToast.error(
-        "Error al cerrar sesion",
-        "Tuvimos un error al cerrar tu sesion.",
+        "Error al cerrar sesión",
+        "Tuvimos un error al cerrar tu sesión."
       );
       return;
     }
-    appToast.info("Cerrando sesion. Hasta luego!");
+    appToast.info("Cerrando sesión. ¡Hasta luego!");
+    setOpen(false);
     router.replace("/auth/login");
   };
 
+  const user = session?.user;
+  const userInitials = user?.name
+    ? user.name.slice(0, 2).toUpperCase()
+    : "U";
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-lg">
-      <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
-        <Link
-          href="/home"
-          className="text-xl font-bold tracking-tight text-zinc-900 flex items-center gap-2 hover:opacity-90 transition"
+    <header
+      className="sticky top-0 z-40 bg-white/95 backdrop-blur-md px-5 pt-4 pb-2 border-b border-slate-100"
+      data-purpose="app-header"
+    >
+      <div className="flex items-center gap-3" data-purpose="search-and-profile">
+        {/* Buscador simulado como botón */}
+        <button
+          type="button"
+          aria-label="Buscar actividades"
+          className="relative flex-1 flex items-center pl-10 pr-4 py-2 bg-white border border-slate-200/80 rounded-2xl text-sm text-slate-400 shadow-sm hover:border-slate-300 transition-all text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-black/10"
         >
-          Súmate
-        </Link>
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <Search className="w-5 h-5" />
+          </div>
+          <span className="truncate">Buscar actividades o causas solidarias...</span>
+        </button>
 
-        <div className="flex items-center gap-4">
-          {/* User info */}
-          <UserEmailInformation />
-          <Separator orientation="vertical" className="h-6!" />
+        {/* Popover con Avatar y Menú de Perfil */}
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              aria-label="Perfil de usuario"
+              className="relative shrink-0 w-10 h-10 rounded-full overflow-hidden border-2 border-slate-200 hover:border-black transition-all focus:outline-none focus:ring-2 focus:ring-black/20 active:scale-95 shadow-sm flex items-center justify-center bg-slate-100"
+            >
+              {isPending ? (
+                <Skeleton className="w-full h-full rounded-full" />
+              ) : user?.image ? (
+                <Image
+                  src={user.image}
+                  alt={user.name ?? "Foto de perfil"}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <span className="font-bold text-xs text-zinc-700">
+                  {userInitials}
+                </span>
+              )}
+            </button>
+          </PopoverTrigger>
 
-          {/* Sign out */}
-          <Button
-            size="sm"
-            className="gap-1.5"
-            onClick={handleSignOut}
+          <PopoverContent
+            align="end"
+            sideOffset={8}
+            className="w-72 bg-white rounded-2xl shadow-xl border border-slate-100 p-4"
           >
-            <LogOut className="size-4" />
-            <span className="hidden sm:inline">Cerrar sesión</span>
-          </Button>
-        </div>
+            {/* Cabecera del Popover con Súmate y botón cerrar */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 mb-3">
+              <div className="flex items-center gap-1.5">
+                <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center text-white text-xs font-bold">
+                  S
+                </div>
+                <span className="font-bold text-sm text-black tracking-tight">
+                  Súmate
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="text-slate-400 hover:text-slate-600 focus:outline-none p-1 rounded-md transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Centro: Foto de perfil, nombre y correo */}
+            <div className="flex flex-col items-center text-center">
+              <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-slate-200 shadow-sm mb-2.5 bg-slate-100 flex items-center justify-center">
+                {user?.image ? (
+                  <Image
+                    src={user.image}
+                    alt={user.name ?? "Avatar"}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <CircleUser className="w-10 h-10 text-slate-400" />
+                )}
+              </div>
+              <h3 className="font-bold text-sm text-slate-900 leading-snug">
+                {user?.name || "Usuario Súmate"}
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5 truncate max-w-[220px]">
+                {user?.email || "Sin correo"}
+              </p>
+            </div>
+
+            {/* Pie: Botón Cerrar sesión */}
+            <div className="mt-3 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 active:scale-95 transition-all focus:outline-none cursor-pointer"
+              >
+                <LogOut className="w-4 h-4 text-rose-600" />
+                <span>Cerrar sesión</span>
+              </button>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
     </header>
   );

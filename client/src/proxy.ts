@@ -8,8 +8,11 @@ import { headers } from "next/headers";
  *
  * Reglas de navegación:
  * 1. Rutas de solo invitados (página principal "/" y rutas de autenticación "/auth/*"):
- *    - Si el usuario TIENE sesión activa -> Redirige a "/home".
- * 2. Rutas protegidas ("/home/*"):
+ *    - Si el usuario TIENE sesión activa -> Redirige a "/explore".
+ * 2. Trampolín de compatibilidad ("/home"):
+ *    - Si el usuario TIENE sesión activa -> Redirige a "/explore".
+ *    - Si el usuario NO tiene sesión activa -> Redirige a "/auth/login".
+ * 3. Rutas protegidas ("/explore", "/my-activities", "/recently"):
  *    - Si el usuario NO tiene sesión activa -> Redirige a "/auth/login".
  */
 export async function proxy(request: NextRequest) {
@@ -34,10 +37,19 @@ export async function proxy(request: NextRequest) {
   const isAuthenticated = !!session;
 
   const isGuestOnlyRoute = pathname === "/" || pathname.startsWith("/auth");
-  const isProtectedRoute = pathname.startsWith("/home");
+  const isHomeTrampoline = pathname === "/home" || pathname.startsWith("/home/");
+  const isProtectedRoute =
+    isHomeTrampoline ||
+    pathname.startsWith("/explore") ||
+    pathname.startsWith("/my-activities") ||
+    pathname.startsWith("/recently");
 
   if (isAuthenticated && isGuestOnlyRoute) {
-    return NextResponse.redirect(new URL("/home", request.url));
+    return NextResponse.redirect(new URL("/explore", request.url));
+  }
+
+  if (isAuthenticated && isHomeTrampoline) {
+    return NextResponse.redirect(new URL("/explore", request.url));
   }
 
   if (!isAuthenticated && isProtectedRoute) {
@@ -48,6 +60,17 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/auth/:path*", "/home/:path*"],
+  matcher: [
+    "/",
+    "/auth/:path*",
+    "/home",
+    "/home/:path*",
+    "/explore",
+    "/explore/:path*",
+    "/my-activities",
+    "/my-activities/:path*",
+    "/recently",
+    "/recently/:path*",
+  ],
 };
 
