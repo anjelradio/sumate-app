@@ -11,7 +11,7 @@ export function AppNavbar() {
   return (
     <nav
       aria-label="Pestañas de navegación principal"
-      className="flex items-center border-t border-slate-100 overflow-x-auto no-scrollbar bg-white"
+      className="flex items-center overflow-x-auto no-scrollbar bg-white"
       role="tablist"
     >
       {NAVIGATION_ITEMS.filter((item) => item.enabled).map((item) => {

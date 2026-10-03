@@ -16,7 +16,7 @@ export type AppSheetSide = "top" | "bottom" | "left" | "right";
 export type AppSheetProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  title: string;
+  title?: string;
   description?: string;
   children: ReactNode;
   side?: AppSheetSide;
@@ -26,6 +26,8 @@ export type AppSheetProps = {
   bodyClassName?: string;
   preventCloseOnOutsideClick?: boolean;
   showCloseButton?: boolean;
+  showDivider?: boolean;
+  autoFocusInput?: boolean;
 };
 
 export function AppSheet({
@@ -41,6 +43,8 @@ export function AppSheet({
   bodyClassName,
   preventCloseOnOutsideClick = false,
   showCloseButton = false,
+  showDivider = false,
+  autoFocusInput = false,
 }: AppSheetProps) {
   // Computamos las clases dinámicas para controlar ancho y alto independientemente
   const getDimensionsClass = () => {
@@ -80,6 +84,9 @@ export function AppSheet({
       <SheetContent
         side={side}
         showCloseButton={showCloseButton}
+        onOpenAutoFocus={
+          autoFocusInput ? undefined : (e) => e.preventDefault()
+        }
         // Configuración para evitar cierre al hacer clic afuera (similar al Modal)
         onPointerDownOutside={
           preventCloseOnOutsideClick ? (e) => e.preventDefault() : undefined
@@ -88,28 +95,40 @@ export function AppSheet({
           preventCloseOnOutsideClick ? (e) => e.preventDefault() : undefined
         }
         className={cn(
-          "flex flex-col bg-popover p-0 text-popover-foreground shadow-2xl",
+          "flex flex-col bg-white p-0 text-popover-foreground shadow-2xl",
           getDimensionsClass(),
-          side === "top" && "rounded-b-2xl",
-          side === "bottom" && "rounded-t-2xl",
+          side === "top" && "rounded-b-3xl",
+          side === "bottom" && "rounded-t-3xl",
           className
         )}
       >
-        <div className="border-b border-border px-6 pb-5 pt-7">
-          <SheetHeader className="space-y-2 text-left pr-6">
-            <SheetTitle className="text-2xl font-bold text-foreground">
-              {title}
-            </SheetTitle>
-            {description ? (
-              <SheetDescription className="text-sm text-muted-foreground">
-                {description}
-              </SheetDescription>
-            ) : null}
-          </SheetHeader>
-        </div>
+        {/* Handle pill para bottom sheet */}
+        {side === "bottom" && (
+          <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mt-3 mb-1 shrink-0" />
+        )}
+
+        {title ? (
+          <div
+            className={cn(
+              "px-6 pt-4 pb-2",
+              showDivider && "border-b border-slate-100 pb-4"
+            )}
+          >
+            <SheetHeader className="space-y-1 text-left pr-6">
+              <SheetTitle className="text-lg font-bold text-slate-900 tracking-tight">
+                {title}
+              </SheetTitle>
+              {description ? (
+                <SheetDescription className="text-xs text-slate-500 font-medium">
+                  {description}
+                </SheetDescription>
+              ) : null}
+            </SheetHeader>
+          </div>
+        ) : null}
         
         {/* Cuerpo del sheet con scroll interno si hay mucho contenido */}
-        <div className={cn("px-6 py-6 flex-1 overflow-y-auto", bodyClassName)}>
+        <div className={cn("px-6 py-4 flex-1 overflow-y-auto", bodyClassName)}>
           {children}
         </div>
       </SheetContent>

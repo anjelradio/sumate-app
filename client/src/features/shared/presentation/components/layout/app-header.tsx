@@ -41,7 +41,7 @@ export function AppHeader() {
 
   return (
     <header
-      className="sticky top-0 z-40 bg-white/95 backdrop-blur-md px-5 pt-4 pb-2 border-b border-slate-100"
+      className="sticky top-0 z-40 bg-white/95 backdrop-blur-md px-5 pt-4 pb-2"
       data-purpose="app-header"
     >
       <div className="flex items-center gap-3" data-purpose="search-and-profile">

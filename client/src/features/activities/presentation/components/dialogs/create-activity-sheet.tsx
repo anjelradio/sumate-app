@@ -28,12 +28,12 @@ export function CreateActivitySheet() {
         open={open}
         onOpenChange={setOpen}
         side="bottom"
-        title="Crear nueva actividad"
-        description="Completa la información básica para convocar a la comunidad de Súmate."
+        title="Crear actividad"
         height="auto"
-        bodyClassName="p-5 max-h-[85vh] overflow-y-auto no-scrollbar"
+        showDivider={false}
+        bodyClassName="px-5 pt-1 pb-5 max-h-[85vh] overflow-y-auto no-scrollbar"
       >
-        <div className="pt-2 pb-4">
+        <div className="pb-2">
           <CreateActivityForm onSuccess={() => setOpen(false)} />
         </div>
       </AppSheet>
