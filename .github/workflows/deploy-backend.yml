@@ -30,5 +30,7 @@ jobs:
         with:
           appSourcePath: ${{ github.workspace }}/server
           acrName: acrsumateapp
+          acrUsername: acrsumateapp
+          acrPassword: ${{ secrets.AZURE_ACR_PASSWORD }}
           containerAppName: ca-sumate-backend
           resourceGroup: in_rainbows
