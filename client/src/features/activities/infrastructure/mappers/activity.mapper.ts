@@ -16,6 +16,8 @@ export const activityMapper = {
       imageUrl: dto.image_url,
       date: dto.date,
       ownerId: dto.owner_id,
+      capacity: dto.capacity,
+      status: dto.status,
       creatorName: dto.creator_name ?? undefined,
     };
   },

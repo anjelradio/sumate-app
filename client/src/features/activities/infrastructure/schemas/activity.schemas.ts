@@ -12,6 +12,8 @@ export const ActivityListItemResponseSchema = z.object({
   image_url: z.string(),
   date: z.string(),
   owner_id: z.string(),
+  capacity: z.number().int().positive(),
+  status: z.enum(["draft", "active", "closed"]),
   creator_name: z.string().nullable().optional(),
 });
 
@@ -33,6 +35,11 @@ export const CreateActivityFormSchema = z.object({
   date: z
     .string({ message: "La fecha de la actividad es obligatoria." })
     .min(1, "Por favor selecciona una fecha y hora."),
+  capacity: z
+    .number({ message: "La cantidad de plazas debe ser un número entero." })
+    .int("La cantidad de plazas debe ser un número entero.")
+    .positive("La cantidad de plazas debe ser mayor a cero.")
+    .max(10000, "La cantidad de plazas no puede superar 10,000."),
   image: z
     .custom<File>(
       (val) => typeof window !== "undefined" && val instanceof File && val.size > 0,

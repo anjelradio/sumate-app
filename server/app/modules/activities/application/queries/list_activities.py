@@ -21,6 +21,8 @@ class ActivityListItemDTO:
     image_url: str
     date: datetime
     owner_id: str
+    capacity: int
+    status: str
     creator_name: str | None = None
 
 
@@ -46,7 +48,9 @@ class ListActivitiesQueryHandler:
                 image_url=activity.image_url,
                 date=activity.date,
                 owner_id=activity.owner_id,
-                creator_name=None,
+                capacity=activity.capacity,
+                status=activity.status.value if hasattr(activity.status, "value") else str(activity.status),
+                creator_name=activity.creator_name,
             )
             for activity in activities
         )

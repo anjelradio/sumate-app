@@ -46,13 +46,21 @@ async def create_activity(
     uow: UoWDep,
     name: Annotated[str, Form(description="Nombre de la actividad")],
     date: Annotated[str, Form(description="Fecha y hora de realización de la actividad")],
-    image: Annotated[UploadFile, File(description="Imagen de la actividad")],
+    capacity: Annotated[int, Form(description="Cantidad de cupos o plazas", ge=1, le=10000)] = 1,
+    image: Annotated[UploadFile, File(description="Imagen de la actividad")] = ...,
 ) -> Response:
     if not name or not name.strip():
         raise APIHTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             code="INVALID_ACTIVITY_NAME",
             message="El nombre de la actividad es requerido.",
+        )
+
+    if capacity <= 0 or capacity > 10000:
+        raise APIHTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            code="INVALID_CAPACITY",
+            message="La cantidad de plazas debe ser mayor a cero y no superar 10,000.",
         )
 
     try:
@@ -96,6 +104,7 @@ async def create_activity(
             owner_id=current_user.user_id,
             image_url=image_url,
             date=parsed_date,
+            capacity=capacity,
         )
     )
 
@@ -133,6 +142,8 @@ def list_activities(
                 image_url=item.image_url,
                 date=item.date,
                 owner_id=item.owner_id,
+                capacity=item.capacity,
+                status=item.status,
                 creator_name=item.creator_name,
             )
             for item in dto.items

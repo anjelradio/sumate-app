@@ -1,6 +1,5 @@
-from __future__ import annotations
-
 from datetime import datetime
+from enum import StrEnum
 from uuid import UUID, uuid4
 
 from app.modules.activities.domain.exceptions import (
@@ -8,6 +7,12 @@ from app.modules.activities.domain.exceptions import (
     InvalidActivityImageException,
     InvalidActivityNameException,
 )
+
+
+class ActivityStatus(StrEnum):
+    DRAFT = "draft"
+    ACTIVE = "active"
+    CLOSED = "closed"
 
 
 class Activity:
@@ -20,14 +25,18 @@ class Activity:
         owner_id: str,
         image_url: str,
         date: datetime,
-        is_active: bool = True,
+        capacity: int = 1,
+        status: ActivityStatus | str = ActivityStatus.DRAFT,
+        creator_name: str | None = None,
     ) -> None:
         self.id = id
         self.name = self.normalize_name(name)
         self.owner_id = self.validate_owner_id(owner_id)
         self.image_url = self.validate_image_url(image_url)
         self.date = self.validate_date(date)
-        self.is_active = is_active
+        self.capacity = self.validate_capacity(capacity)
+        self.status = ActivityStatus(status) if isinstance(status, str) else status
+        self.creator_name = creator_name
 
     @classmethod
     def create(
@@ -37,15 +46,20 @@ class Activity:
         owner_id: str,
         image_url: str,
         date: datetime,
+        capacity: int = 1,
+        status: ActivityStatus | str = ActivityStatus.DRAFT,
+        creator_name: str | None = None,
     ) -> Activity:
-        """Fábrica de negocio: genera UUID y estado inicial activo."""
+        """Fábrica de negocio: genera UUID y estado inicial en borrador."""
         return cls(
             id=uuid4(),
             name=name,
             owner_id=owner_id,
             image_url=image_url,
             date=date,
-            is_active=True,
+            capacity=capacity,
+            status=status,
+            creator_name=creator_name,
         )
 
     @staticmethod
@@ -71,3 +85,11 @@ class Activity:
         if not isinstance(date, datetime):
             raise InvalidActivityDateException("La fecha de la actividad debe ser un objeto datetime válido.")
         return date
+
+    @staticmethod
+    def validate_capacity(capacity: int) -> int:
+        if not isinstance(capacity, int) or isinstance(capacity, bool) or capacity <= 0:
+            raise ValueError("La cantidad de plazas debe ser un número entero mayor a cero.")
+        if capacity > 10000:
+            raise ValueError("La cantidad de plazas no puede superar 10,000.")
+        return capacity

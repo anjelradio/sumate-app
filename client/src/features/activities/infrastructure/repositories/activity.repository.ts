@@ -30,6 +30,7 @@ export const activityRepositoryImpl: ActivityRepository = {
     return apiRequestData({
       url: url.toString(),
       method: "GET",
+      next: { revalidate: 30, tags: ["activities", `activities-${scope}`] },
       responseSchema: ActivityListResponseSchema,
       mapData: activityMapper.toActivityList,
       fallbackMessage: "Error al cargar la lista de actividades.",

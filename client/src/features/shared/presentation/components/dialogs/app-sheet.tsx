@@ -28,6 +28,7 @@ export type AppSheetProps = {
   showCloseButton?: boolean;
   showDivider?: boolean;
   autoFocusInput?: boolean;
+  showHeader?: boolean;
 };
 
 export function AppSheet({
@@ -45,6 +46,7 @@ export function AppSheet({
   showCloseButton = false,
   showDivider = false,
   autoFocusInput = false,
+  showHeader = true,
 }: AppSheetProps) {
   // Computamos las clases dinámicas para controlar ancho y alto independientemente
   const getDimensionsClass = () => {
@@ -107,15 +109,15 @@ export function AppSheet({
           <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mt-3 mb-1 shrink-0" />
         )}
 
-        {title ? (
+        {showHeader && title ? (
           <div
             className={cn(
-              "px-6 pt-4 pb-2",
-              showDivider && "border-b border-slate-100 pb-4"
+              "px-5 pt-2 pb-1",
+              showDivider && "border-b border-slate-100 pb-2"
             )}
           >
-            <SheetHeader className="space-y-1 text-left pr-6">
-              <SheetTitle className="text-lg font-bold text-slate-900 tracking-tight">
+            <SheetHeader className="p-0 space-y-0.5 text-left">
+              <SheetTitle className="text-base font-bold text-slate-900 tracking-tight">
                 {title}
               </SheetTitle>
               {description ? (
@@ -125,7 +127,12 @@ export function AppSheet({
               ) : null}
             </SheetHeader>
           </div>
-        ) : null}
+        ) : (
+          <SheetHeader className="sr-only">
+            <SheetTitle>{title || "Diálogo"}</SheetTitle>
+            {description ? <SheetDescription>{description}</SheetDescription> : null}
+          </SheetHeader>
+        )}
         
         {/* Cuerpo del sheet con scroll interno si hay mucho contenido */}
         <div className={cn("px-6 py-4 flex-1 overflow-y-auto", bodyClassName)}>

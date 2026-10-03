@@ -30,8 +30,10 @@ export function CreateActivitySheet() {
         side="bottom"
         title="Crear actividad"
         height="auto"
+        showHeader={false}
         showDivider={false}
-        bodyClassName="px-5 pt-1 pb-5 max-h-[85vh] overflow-y-auto no-scrollbar"
+        autoFocusInput={false}
+        bodyClassName="px-5 pt-2 pb-5 max-h-[85vh] overflow-y-auto no-scrollbar"
       >
         <div className="pb-2">
           <CreateActivityForm onSuccess={() => setOpen(false)} />

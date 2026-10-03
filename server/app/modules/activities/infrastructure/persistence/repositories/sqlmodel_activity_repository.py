@@ -13,6 +13,7 @@ from app.modules.activities.domain.entities.activity import Activity
 from app.modules.activities.domain.repositories.activity_repository import ActivityRepository
 from app.modules.activities.infrastructure.persistence.mappers.activity_mapper import ActivityMapper
 from app.modules.activities.infrastructure.persistence.models.activity_model import ActivityModel
+from app.shared.infrastructure.db.better_auth import BetterAuthUser
 
 
 class SQLModelActivityRepository(ActivityRepository):
@@ -20,12 +21,19 @@ class SQLModelActivityRepository(ActivityRepository):
         self.db = db
 
     def get_by_id(self, activity_id: UUID) -> Activity | None:
-        statement = select(ActivityModel).where(
-            ActivityModel.id == activity_id,
-            ActivityModel.deleted_date.is_(None),
+        statement = (
+            select(ActivityModel, BetterAuthUser.name.label("creator_name"))
+            .outerjoin(BetterAuthUser, ActivityModel.owner_id == BetterAuthUser.id)
+            .where(
+                ActivityModel.id == activity_id,
+                ActivityModel.deleted_date.is_(None),
+            )
         )
-        record = self.db.exec(statement).first()
-        return ActivityMapper.to_domain(record) if record else None
+        result = self.db.exec(statement).first()
+        if not result:
+            return None
+        record, creator_name = result
+        return ActivityMapper.to_domain(record, creator_name=creator_name)
 
     def list_activities(
         self,
@@ -33,24 +41,34 @@ class SQLModelActivityRepository(ActivityRepository):
         owner_id: str | None = None,
         exclude_owner_id: str | None = None,
     ) -> list[Activity]:
-        statement = select(ActivityModel).where(ActivityModel.deleted_date.is_(None))
+        statement = (
+            select(ActivityModel, BetterAuthUser.name.label("creator_name"))
+            .outerjoin(BetterAuthUser, ActivityModel.owner_id == BetterAuthUser.id)
+            .where(ActivityModel.deleted_date.is_(None))
+        )
 
         if owner_id:
             statement = statement.where(ActivityModel.owner_id == owner_id)
+            # Para mis actividades: orden descendente por fecha de registro
+            statement = statement.order_by(ActivityModel.created_date.desc())
         elif exclude_owner_id:
-            statement = statement.where(ActivityModel.owner_id != exclude_owner_id)
+            statement = statement.where(
+                ActivityModel.owner_id != exclude_owner_id,
+                ActivityModel.status == "active",
+            )
+            # Para explorar: orden cronológico ascendente por fecha de realización
+            statement = statement.order_by(ActivityModel.date.asc())
 
-        # Ordenar por fecha de realización más próxima primero
-        statement = statement.order_by(ActivityModel.date.asc())
-        records = self.db.exec(statement).all()
-        return [ActivityMapper.to_domain(record) for record in records]
+        results = self.db.exec(statement).all()
+        return [
+            ActivityMapper.to_domain(record, creator_name=creator_name)
+            for record, creator_name in results
+        ]
 
     def save(self, activity: Activity) -> None:
         record = self.db.get(ActivityModel, activity.id)
         if record is None:
             model = ActivityMapper.to_model(activity)
-            if not activity.is_active:
-                model.deleted_date = datetime.now(timezone.utc)
             self.db.add(model)
             return
 
@@ -58,10 +76,10 @@ class SQLModelActivityRepository(ActivityRepository):
         record.owner_id = activity.owner_id
         record.image_url = activity.image_url
         record.date = activity.date
-
-        if activity.is_active:
-            record.deleted_date = None
-        elif record.deleted_date is None:
-            record.deleted_date = datetime.now(timezone.utc)
-
+        record.capacity = activity.capacity
+        record.status = (
+            activity.status.value
+            if hasattr(activity.status, "value")
+            else str(activity.status)
+        )
         record.modified_date = datetime.now(timezone.utc)

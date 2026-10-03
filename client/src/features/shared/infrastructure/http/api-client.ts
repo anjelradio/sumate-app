@@ -46,6 +46,7 @@ type RequestConfig = {
    */
   withAuth?: boolean;
   cache?: RequestCache;
+  next?: { revalidate?: number | false; tags?: string[] };
   body?: unknown;
 };
 
@@ -114,6 +115,7 @@ async function doRequest(config: RequestConfig, token: string | null): Promise<R
     method: config.method,
     headers: buildHeaders(token, hasBody),
     cache: config.cache,
+    next: config.next,
     ...(hasBody ? { body: JSON.stringify(config.body) } : {}),
   });
 }

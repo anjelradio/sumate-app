@@ -12,14 +12,16 @@ class ActivityMapper:
     """Mapeo entre entidad de dominio Activity y modelo de persistencia ActivityModel."""
 
     @staticmethod
-    def to_domain(model: ActivityModel) -> Activity:
+    def to_domain(model: ActivityModel, creator_name: str | None = None) -> Activity:
         return Activity(
             id=model.id,
             name=model.name,
             owner_id=model.owner_id,
             image_url=model.image_url,
             date=model.date,
-            is_active=model.deleted_date is None,
+            capacity=model.capacity,
+            status=model.status,
+            creator_name=creator_name,
         )
 
     @staticmethod
@@ -30,4 +32,6 @@ class ActivityMapper:
             owner_id=entity.owner_id,
             image_url=entity.image_url,
             date=entity.date,
+            capacity=entity.capacity,
+            status=entity.status.value if hasattr(entity.status, "value") else str(entity.status),
         )

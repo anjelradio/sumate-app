@@ -125,15 +125,29 @@ export function CreateActivityForm({ onSuccess }: CreateActivityFormProps) {
         required
       />
 
-      {/* Fecha y hora */}
-      <TextFormField
-        id="date"
-        name="date"
-        label="Fecha y hora de realización"
-        placeholder="Selecciona fecha y hora"
-        type="datetime-local"
-        required
-      />
+      {/* Fecha de realización y Cantidad de cupos en la misma fila */}
+      <div className="grid grid-cols-2 gap-3">
+        <TextFormField
+          id="date"
+          name="date"
+          label="Fecha de realización"
+          placeholder="Selecciona fecha y hora"
+          type="datetime-local"
+          required
+        />
+
+        <TextFormField
+          id="capacity"
+          name="capacity"
+          label="Cantidad de cupos"
+          placeholder="Ej. 10"
+          type="number"
+          min={1}
+          max={10000}
+          defaultValue="10"
+          required
+        />
+      </div>
 
       {/* Botón de acción */}
       <div className="pt-2">
@@ -145,10 +159,10 @@ export function CreateActivityForm({ onSuccess }: CreateActivityFormProps) {
           {isPending ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              <span>Creando actividad...</span>
+              <span>Registrando actividad...</span>
             </>
           ) : (
-            <span>Publicar actividad</span>
+            <span>Registrar actividad</span>
           )}
         </button>
       </div>

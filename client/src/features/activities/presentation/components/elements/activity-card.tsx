@@ -1,9 +1,10 @@
 import Image from "next/image";
-import { Calendar } from "lucide-react";
-import type { ActivityListItem } from "@/features/activities/domain/entities/activity.entity";
+import { Calendar, Users } from "lucide-react";
+import type { ActivityListItem, ActivityScope } from "@/features/activities/domain/entities/activity.entity";
 
 type ActivityCardProps = {
   activity: ActivityListItem;
+  scope?: ActivityScope;
 };
 
 function formatActivityDate(dateString: string): string {
@@ -35,8 +36,33 @@ function formatActivityDate(dateString: string): string {
   }
 }
 
-export function ActivityCard({ activity }: ActivityCardProps) {
+export function ActivityCard({ activity, scope }: ActivityCardProps) {
   const formattedDate = formatActivityDate(activity.date);
+
+  const getStatusBadge = () => {
+    switch (activity.status) {
+      case "draft":
+        return {
+          label: "Borrador",
+          className: "bg-amber-50 text-amber-700 border border-amber-200/70",
+        };
+      case "active":
+        return {
+          label: "Activa",
+          className: "bg-emerald-50 text-emerald-700 border border-emerald-200/70",
+        };
+      case "closed":
+        return {
+          label: "Cerrada",
+          className: "bg-slate-100 text-slate-600 border border-slate-200/70",
+        };
+      default:
+        return null;
+    }
+  };
+
+  const statusBadge = getStatusBadge();
+  const showStatusBadge = scope === "mine" || activity.status !== "active";
 
   return (
     <article
@@ -71,6 +97,22 @@ export function ActivityCard({ activity }: ActivityCardProps) {
             Por <span className="font-semibold text-slate-700">{activity.creatorName}</span>
           </p>
         )}
+
+        {/* Plazas / Cupos e Insignia de Estado */}
+        <div className="mt-3 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-1.5 text-slate-600 font-medium">
+            <Users className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <span>
+              {activity.capacity} {activity.capacity === 1 ? "cupo disponible" : "cupos disponibles"}
+            </span>
+          </div>
+
+          {showStatusBadge && statusBadge && (
+            <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${statusBadge.className}`}>
+              {statusBadge.label}
+            </span>
+          )}
+        </div>
       </div>
     </article>
   );

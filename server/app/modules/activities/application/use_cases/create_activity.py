@@ -15,6 +15,7 @@ class CreateActivityCommand:
     owner_id: str
     image_url: str
     date: datetime
+    capacity: int = 1
 
 
 class CreateActivityUseCase:
@@ -28,6 +29,7 @@ class CreateActivityUseCase:
             owner_id=command.owner_id,
             image_url=command.image_url,
             date=command.date,
+            capacity=command.capacity,
         )
         self.activity_repository.save(activity)
         self.uow.commit()

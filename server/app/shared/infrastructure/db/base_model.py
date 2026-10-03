@@ -17,14 +17,12 @@ class BaseModel(SQLModel):
 
     Campos incluidos:
     - id            → UUID v4 generado automáticamente (PK)
-    - state         → soft-delete flag (True = activo)
     - created_date  → timestamp de creación (UTC con timezone)
     - modified_date → timestamp de última modificación (actualizado automáticamente en cada UPDATE)
     - deleted_date  → timestamp de eliminación lógica (nullable)
     """
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    state: bool = Field(default=True, index=True)
 
     created_date: datetime = Field(
         default_factory=utc_now,
@@ -45,14 +43,12 @@ class BaseModel(SQLModel):
     )
 
     def soft_delete(self) -> None:
-        """Marca el registro como inactivo y registra la fecha de eliminación."""
+        """Marca el registro como eliminado lógicamente registrando la fecha."""
         now = utc_now()
-        self.state = False
         self.deleted_date = now
         self.modified_date = now
 
     def restore(self) -> None:
         """Restaura un registro eliminado lógicamente."""
-        self.state = True
         self.deleted_date = None
         self.modified_date = utc_now()

@@ -18,3 +18,5 @@ class ActivityModel(BaseModel, table=True):
     owner_id: str = Field(index=True, nullable=False)
     image_url: str = Field(nullable=False)
     date: datetime = Field(index=True, nullable=False)
+    status: str = Field(default="draft", index=True, nullable=False)
+    capacity: int = Field(default=1, nullable=False)

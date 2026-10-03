@@ -17,6 +17,8 @@ class ActivityListItemRead(SQLModel):
     image_url: str
     date: datetime
     owner_id: str
+    capacity: int
+    status: str
     creator_name: str | None = None
 
 

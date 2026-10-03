@@ -5,18 +5,29 @@
  * TypeScript puro sin dependencias de infraestructura ni frameworks.
  */
 
+export type ActivityStatus = "draft" | "active" | "closed";
+
 export type Activity = {
   id: string;
   name: string;
   ownerId: string;
   imageUrl: string;
   date: string; // Formato ISO 8601 string
+  capacity: number;
+  status: ActivityStatus;
   creatorName?: string;
 };
 
 export type ActivityListItem = Pick<
   Activity,
-  "id" | "name" | "imageUrl" | "date" | "ownerId" | "creatorName"
+  | "id"
+  | "name"
+  | "imageUrl"
+  | "date"
+  | "ownerId"
+  | "capacity"
+  | "status"
+  | "creatorName"
 >;
 
 export type ActivityScope = "mine" | "others";
