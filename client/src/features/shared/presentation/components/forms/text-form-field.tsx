@@ -9,7 +9,7 @@ type TextFormFieldProps = {
   name: string;
   label: string;
   placeholder: string;
-  type: "text" | "email" | "password";
+  type?: "text" | "email" | "password" | "datetime-local" | string;
   description?: string;
   autoComplete?: string;
   required?: boolean;

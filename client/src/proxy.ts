@@ -36,12 +36,10 @@ export async function proxy(request: NextRequest) {
   const isGuestOnlyRoute = pathname === "/" || pathname.startsWith("/auth");
   const isProtectedRoute = pathname.startsWith("/home");
 
-  // 1. Si está autenticado e intenta acceder a la landing ("/") o rutas de autenticación -> Redirigir a /home
   if (isAuthenticated && isGuestOnlyRoute) {
     return NextResponse.redirect(new URL("/home", request.url));
   }
 
-  // 2. Si NO está autenticado e intenta acceder a rutas protegidas -> Redirigir a /auth/login
   if (!isAuthenticated && isProtectedRoute) {
     return NextResponse.redirect(new URL("/auth/login", request.url));
   }

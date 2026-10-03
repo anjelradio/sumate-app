@@ -1,48 +1,119 @@
-from pydantic import Field
-from pydantic_settings import BaseSettings
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    # Project Info
-    PROJECT_NAME: str = "Your project name :)"
-    LANGUAGE_CODE: str = "es"
-    TIME_ZONE: str = "America/La_Paz"
+    PROJECT_NAME: str = Field(default="API", env="PROJECT_NAME")
+    ENVIRONMENT: str = Field(default="DEV", env="ENVIRONMENT")
 
-    # Environment DEV/PROD
-    ENVIRONMENT: str = Field(..., env="ENVIRONMENT")
+    # ── Base de datos ─────────────────────────────────────────────────────────
+    # Valor por defecto: SQLite local para poder arrancar sin configurar nada.
+    # En producción (Render / Railway / Fly.io) o en local contra Neon,
+    # define DATABASE_URL en tu .env con la URL completa de PostgreSQL.
+    DATABASE_URL: str = Field(default="sqlite:///./dev.db", env="DATABASE_URL")
+    SQL_ECHO: bool = Field(default=False, env="SQL_ECHO")
 
-    # Database
-    DATABASE_URL: str = Field(..., env="DATABASE_URL")
+    # ── JWT / Auth ────────────────────────────────────────────────────────────
+    # BETTER_AUTH_SECRET ya NO se usa para verificar JWTs.
+    # La verificación cambió de HS256 + secret compartido a EdDSA + JWKS:
+    # FastAPI descarga la clave pública desde {FRONTEND_URL}/api/auth/jwks.
+    # Se conserva por si algún módulo futuro lo necesita (ej: webhooks propios).
+    BETTER_AUTH_SECRET: str = Field(
+        default="super-secret-key", env="BETTER_AUTH_SECRET"
+    )
 
-    # JWT
-    JWT_SECRET: str = Field(..., env="JWT_SECRET")
-    JWT_ALG: str = Field(default="HS256", env="JWT_ALG")
-    JWT_EXPIRES_MIN: int = Field(default=60 * 24, env="JWT_EXPIRES_MIN") # 1 day
+    # URL del frontend Next.js. Se usa para construir la URL del JWKS endpoint:
+    #   {FRONTEND_URL}/api/auth/jwks
+    # En producción: https://tu-dominio.com
+    FRONTEND_URL: str = Field(
+        default="http://localhost:3000", env="FRONTEND_URL"
+    )
+    # Limita cuanto espera FastAPI al JWKS de Better Auth durante validacion JWT.
+    JWKS_TIMEOUT_SECONDS: float = Field(
+        default=5.0, gt=0, env="JWKS_TIMEOUT_SECONDS"
+    )
 
-    # Brevo Email Service
-    BREVO_API_KEY: str = Field(default="", env="BREVO_API_KEY")
-    BREVO_SENDER_EMAIL: str = Field(default="", env="BREVO_SENDER_EMAIL")
-    BREVO_SENDER_NAME: str = Field(default="your-sender-name-here", env="BREVO_SENDER_NAME")
+    # Identificador del emisor del JWT (claim "iss").
+    # Debe coincidir con JWT_ISSUER configurado en el frontend (lib/auth.ts).
+    # Si está vacío, la validación del issuer se desactiva automáticamente.
+    JWT_ISSUER: str = Field(default="", env="JWT_ISSUER")
 
-    # OTP code
-    OTP_LENGTH: int = Field(default=6, env="OTP_LENGTH")
-    OTP_EXPIRES_MIN: int = Field(default=5, env="OTP_EXPIRES_MIN")
-    OTP_MAX_ATTEMPTS: int = Field(default=5, env="OTP_MAX_ATTEMPTS")
-    OTP_RESEND_COOLDOWN_SEC: int = Field(default=60, env="OTP_RESEND_COOLDOWN_SEC")
+    # Identificador del receptor del JWT (claim "aud").
+    # Debe coincidir con JWT_AUDIENCE configurado en el frontend.
+    # Si está vacío (recomendado para empezar), la validación se desactiva.
+    JWT_AUDIENCE: str = Field(default="", env="JWT_AUDIENCE")
 
-    # Redis
-    REDIS_URL: str = Field(..., env="REDIS_URL")
+    # ── Better Auth: Configuración de Roles y JWKS ────────────────────────────
+    # Si en el frontend tienes instalado el plugin de 'admin', déjalo en True.
+    # Si NO usas el plugin de admin en Better Auth, cambia a False en tu .env:
+    #   BETTER_AUTH_ENABLE_ROLES=false
+    # Al estar en False, el backend NO exige el claim 'role' en el JWT;
+    # únicamente valida que el usuario esté autenticado con un token válido.
+    BETTER_AUTH_ENABLE_ROLES: bool = Field(
+        default=True, env="BETTER_AUTH_ENABLE_ROLES"
+    )
 
-    # Audit config
-    AUDIT_ENABLED: bool = Field(default=False, env="AUDIT_ENABLED")
-    AUDIT_ENCRYPTION_KEY: str = Field(default="", env="AUDIT_ENCRYPTION_KEY")
-    AUDIT_ACCESS_KEY_LENGTH: int = Field(default=10, env="AUDIT_ACCESS_KEY_LENGTH")
-    AUDIT_ACCESS_EXPIRES_MIN: int = Field(default=10, env="AUDIT_ACCESS_EXPIRES_MIN")
-    AUDIT_ACCESS_MAX_ATTEMPTS: int = Field(default=5, env="AUDIT_ACCESS_MAX_ATTEMPTS")
-    AUDIT_ACCESS_SESSION_SEC: int = Field(default=1800, env="AUDIT_ACCESS_SESSION_SEC")
+    # URL personalizada para descargar el JWKS (útil si FastAPI corre en Docker
+    # y debe comunicarse con Next.js mediante red interna como http://frontend:3000/api/auth/jwks
+    # mientras el navegador usa http://localhost:3000). Si es None, usa {FRONTEND_URL}/api/auth/jwks.
+    BETTER_AUTH_JWKS_URL: str | None = Field(
+        default=None, env="BETTER_AUTH_JWKS_URL"
+    )
 
-    class Config:
-        env_file = ".env"
+    @property
+    def jwks_url(self) -> str:
+        """URL definitiva para el JWKS endpoint de Better Auth."""
+        if self.BETTER_AUTH_JWKS_URL:
+            return self.BETTER_AUTH_JWKS_URL.strip()
+        return f"{self.FRONTEND_URL.rstrip('/')}/api/auth/jwks"
+
+    # ── CORS ──────────────────────────────────────────────────────────────────
+    CORS_ORIGINS: list[str] = Field(
+        default_factory=lambda: ["http://localhost:3000", "http://localhost:5173"],
+        env="CORS_ORIGINS",
+    )
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, value: object) -> list[str]:
+        if isinstance(value, str):
+            return [o.strip() for o in value.split(",") if o.strip()]
+        return value  # type: ignore[return-value]
+
+    # ── Cloudinary ────────────────────────────────────────────────────────────
+    CLOUDINARY_CLOUD_NAME: str = Field(default="", env="CLOUDINARY_CLOUD_NAME")
+    CLOUDINARY_API_KEY: str = Field(default="", env="CLOUDINARY_API_KEY")
+    CLOUDINARY_API_SECRET: str = Field(default="", env="CLOUDINARY_API_SECRET")
+
+    @property
+    def database_url_normalized(self) -> str:
+        """
+        Devuelve la DATABASE_URL lista para SQLAlchemy con el driver correcto.
+
+        Reglas:
+        - SQLite  → se mantiene tal cual (usado en DEV por defecto).
+        - postgres:// o postgresql:// sin driver explícito
+          → se convierte a postgresql+psycopg://  (psycopg v3, el que
+            tenemos instalado vía psycopg / psycopg-binary).
+        """
+        url = self.DATABASE_URL.strip()
+
+        if url.startswith("sqlite"):
+            return url
+
+        # Normalizar a psycopg v3
+        if url.startswith("postgres://"):
+            return "postgresql+psycopg://" + url[len("postgres://"):]
+        if url.startswith("postgresql://") and "+psycopg" not in url:
+            return "postgresql+psycopg://" + url[len("postgresql://"):]
+
+        return url
+
+    @property
+    def is_sqlite(self) -> bool:
+        return self.database_url_normalized.startswith("sqlite")
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
 settings = Settings()

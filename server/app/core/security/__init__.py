@@ -1,16 +1,9 @@
-from app.core.security.jwt import (
-    create_access_token,
-    decode_token,
-    hash_password,
-    verify_password,
-)
-from app.core.security.otp import generate_otp, hash_otp
+"""
+app/core/security
 
-__all__ = [
-    "create_access_token",
-    "decode_token",
-    "generate_otp",
-    "hash_otp",
-    "hash_password",
-    "verify_password",
-]
+Autenticación y autorización basada en Better Auth y tokens JWT.
+"""
+
+from app.core.security.auth import Admin, AuthUser, CurrentUser, Role, require_role
+
+__all__ = ["Admin", "AuthUser", "CurrentUser", "Role", "require_role"]

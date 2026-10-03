@@ -1,0 +1,157 @@
+"use client";
+
+import { useState, useRef, useTransition, type FormEvent } from "react";
+import Image from "next/image";
+import { UploadCloud, X, Loader2 } from "lucide-react";
+import TextFormField from "@/features/shared/presentation/components/forms/text-form-field";
+import { appToast } from "@/features/shared/presentation/components/notifications/toast";
+import { createEventAction } from "../../actions/event.action";
+
+type CreateEventFormProps = {
+  onSuccess?: () => void;
+};
+
+export function CreateEventForm({ onSuccess }: CreateEventFormProps) {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedFile(null);
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!selectedFile) {
+      appToast.error("Imagen requerida", "Por favor selecciona una imagen para tu evento.");
+      return;
+    }
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    formData.set("image", selectedFile);
+
+    startTransition(async () => {
+      const result = await createEventAction(formData);
+
+      if (!result.ok) {
+        appToast.error("Error al crear evento", result.errors?.[0] || "No se pudo registrar el evento.");
+        return;
+      }
+
+      appToast.success("¡Evento creado exitosamente!");
+      handleRemoveImage();
+      form.reset();
+      onSuccess?.();
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-5 text-left">
+      {/* Slot de selección y previsualización de imagen */}
+      <div className="space-y-2">
+        <label className="block text-[15px] font-bold text-zinc-900 font-label">
+          Imagen del evento
+        </label>
+
+        {previewUrl ? (
+          <div className="relative w-full h-44 rounded-2xl overflow-hidden border border-zinc-200 bg-zinc-50 group">
+            <Image
+              src={previewUrl}
+              alt="Previsualización del evento"
+              fill
+              unoptimized
+              className="object-cover"
+            />
+            <button
+              type="button"
+              onClick={handleRemoveImage}
+              aria-label="Eliminar imagen seleccionada"
+              className="absolute top-3 right-3 p-1.5 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-zinc-300 rounded-2xl bg-zinc-50 hover:bg-zinc-100/70 transition-colors cursor-pointer px-4 text-center group"
+          >
+            <div className="w-12 h-12 rounded-full bg-[#6355DE]/10 text-[#6355DE] flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
+              <UploadCloud className="w-6 h-6" />
+            </div>
+            <p className="text-sm font-semibold text-zinc-800">
+              Toca para subir una fotografía
+            </p>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              PNG, JPG o WEBP (máx. 5MB)
+            </p>
+          </div>
+        )}
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+      </div>
+
+      {/* Nombre del evento */}
+      <TextFormField
+        id="name"
+        name="name"
+        label="Nombre del evento"
+        placeholder="Ej. Reforestación Comunitaria"
+        required
+      />
+
+      {/* Fecha y hora */}
+      <TextFormField
+        id="date"
+        name="date"
+        label="Fecha y hora de realización"
+        placeholder="Selecciona fecha y hora"
+        type="datetime-local"
+        required
+      />
+
+      {/* Botón de acción */}
+      <div className="pt-2">
+        <button
+          type="submit"
+          disabled={isPending}
+          className="w-full py-3.5 px-4 rounded-2xl bg-[#6355DE] text-white font-bold text-base shadow-lg shadow-[#6355DE]/25 hover:bg-[#5243CE] active:scale-[0.99] disabled:opacity-60 transition duration-200 flex items-center justify-center gap-2 cursor-pointer"
+        >
+          {isPending ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span>Creando evento...</span>
+            </>
+          ) : (
+            <span>Publicar evento</span>
+          )}
+        </button>
+      </div>
+    </form>
+  );
+}
