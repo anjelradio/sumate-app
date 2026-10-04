@@ -1,17 +1,17 @@
-"""
-app/modules/activities/infrastructure/persistence/repositories/sqlmodel_activity_repository.py
-
-Implementación de ActivityRepository utilizando SQLModel / SQLAlchemy Session.
-Cumple con convenciones de nomenclatura, filtrado de deleted_date y métodos de persistencia.
-"""
-
 from datetime import datetime, timezone
 from uuid import UUID
 from sqlmodel import Session, select
 
 from app.modules.activities.domain.entities.activity import Activity
+from app.modules.activities.domain.entities.activity_detail import ActivityDetail
 from app.modules.activities.domain.repositories.activity_repository import ActivityRepository
+from app.modules.activities.infrastructure.persistence.mappers.activity_detail_mapper import (
+    ActivityDetailMapper,
+)
 from app.modules.activities.infrastructure.persistence.mappers.activity_mapper import ActivityMapper
+from app.modules.activities.infrastructure.persistence.models.activity_detail_model import (
+    ActivityDetailModel,
+)
 from app.modules.activities.infrastructure.persistence.models.activity_model import ActivityModel
 from app.shared.infrastructure.db.better_auth import BetterAuthUser
 
@@ -22,7 +22,11 @@ class SQLModelActivityRepository(ActivityRepository):
 
     def get_by_id(self, activity_id: UUID) -> Activity | None:
         statement = (
-            select(ActivityModel, BetterAuthUser.name.label("creator_name"))
+            select(
+                ActivityModel,
+                BetterAuthUser.name.label("creator_name"),
+                BetterAuthUser.image.label("creator_image"),
+            )
             .outerjoin(BetterAuthUser, ActivityModel.owner_id == BetterAuthUser.id)
             .where(
                 ActivityModel.id == activity_id,
@@ -32,8 +36,12 @@ class SQLModelActivityRepository(ActivityRepository):
         result = self.db.exec(statement).first()
         if not result:
             return None
-        record, creator_name = result
-        return ActivityMapper.to_domain(record, creator_name=creator_name)
+        record, creator_name, creator_image = result
+        return ActivityMapper.to_domain(
+            record,
+            creator_name=creator_name,
+            creator_image=creator_image,
+        )
 
     def list_activities(
         self,
@@ -42,7 +50,11 @@ class SQLModelActivityRepository(ActivityRepository):
         exclude_owner_id: str | None = None,
     ) -> list[Activity]:
         statement = (
-            select(ActivityModel, BetterAuthUser.name.label("creator_name"))
+            select(
+                ActivityModel,
+                BetterAuthUser.name.label("creator_name"),
+                BetterAuthUser.image.label("creator_image"),
+            )
             .outerjoin(BetterAuthUser, ActivityModel.owner_id == BetterAuthUser.id)
             .where(ActivityModel.deleted_date.is_(None))
         )
@@ -61,8 +73,12 @@ class SQLModelActivityRepository(ActivityRepository):
 
         results = self.db.exec(statement).all()
         return [
-            ActivityMapper.to_domain(record, creator_name=creator_name)
-            for record, creator_name in results
+            ActivityMapper.to_domain(
+                record,
+                creator_name=creator_name,
+                creator_image=creator_image,
+            )
+            for record, creator_name, creator_image in results
         ]
 
     def save(self, activity: Activity) -> None:
@@ -83,3 +99,62 @@ class SQLModelActivityRepository(ActivityRepository):
             else str(activity.status)
         )
         record.modified_date = datetime.now(timezone.utc)
+
+    def save_detail(self, detail: ActivityDetail) -> None:
+        statement = select(ActivityDetailModel).where(
+            ActivityDetailModel.activity_id == detail.activity_id
+        )
+        record = self.db.exec(statement).first()
+        if record is None:
+            model = ActivityDetailMapper.to_model(detail)
+            self.db.add(model)
+            return
+
+        record.latitude = detail.latitude
+        record.longitude = detail.longitude
+        record.place = detail.place
+        record.address = detail.address
+        record.description = detail.description
+        record.modified_date = datetime.now(timezone.utc)
+
+    def get_detail_record(self, activity_id: UUID) -> ActivityDetail | None:
+        statement = select(ActivityDetailModel).where(
+            ActivityDetailModel.activity_id == activity_id
+        )
+        record = self.db.exec(statement).first()
+        if not record:
+            return None
+        return ActivityDetailMapper.to_domain(record)
+
+    def get_detail_by_activity_id(
+        self, activity_id: UUID
+    ) -> tuple[Activity, ActivityDetail | None] | None:
+        statement = (
+            select(
+                ActivityModel,
+                BetterAuthUser.name.label("creator_name"),
+                BetterAuthUser.image.label("creator_image"),
+                ActivityDetailModel,
+            )
+            .outerjoin(BetterAuthUser, ActivityModel.owner_id == BetterAuthUser.id)
+            .outerjoin(
+                ActivityDetailModel,
+                ActivityModel.id == ActivityDetailModel.activity_id,
+            )
+            .where(
+                ActivityModel.id == activity_id,
+                ActivityModel.deleted_date.is_(None),
+            )
+        )
+        result = self.db.exec(statement).first()
+        if not result:
+            return None
+
+        act_model, creator_name, creator_image, detail_model = result
+        activity = ActivityMapper.to_domain(
+            act_model,
+            creator_name=creator_name,
+            creator_image=creator_image,
+        )
+        detail = ActivityDetailMapper.to_domain(detail_model) if detail_model else None
+        return (activity, detail)

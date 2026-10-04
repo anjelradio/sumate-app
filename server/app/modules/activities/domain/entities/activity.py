@@ -28,6 +28,7 @@ class Activity:
         capacity: int = 1,
         status: ActivityStatus | str = ActivityStatus.DRAFT,
         creator_name: str | None = None,
+        creator_image: str | None = None,
     ) -> None:
         self.id = id
         self.name = self.normalize_name(name)
@@ -37,6 +38,7 @@ class Activity:
         self.capacity = self.validate_capacity(capacity)
         self.status = ActivityStatus(status) if isinstance(status, str) else status
         self.creator_name = creator_name
+        self.creator_image = creator_image
 
     @classmethod
     def create(
@@ -49,8 +51,8 @@ class Activity:
         capacity: int = 1,
         status: ActivityStatus | str = ActivityStatus.DRAFT,
         creator_name: str | None = None,
-    ) -> Activity:
-        """Fábrica de negocio: genera UUID y estado inicial en borrador."""
+        creator_image: str | None = None,
+    ) -> "Activity":
         return cls(
             id=uuid4(),
             name=name,
@@ -60,7 +62,33 @@ class Activity:
             capacity=capacity,
             status=status,
             creator_name=creator_name,
+            creator_image=creator_image,
         )
+
+    def update_info(
+        self,
+        *,
+        name: str | None = None,
+        date: datetime | None = None,
+        capacity: int | None = None,
+    ) -> None:
+        if name is not None:
+            self.name = self.normalize_name(name)
+        if date is not None:
+            self.date = self.validate_date(date)
+        if capacity is not None:
+            self.capacity = self.validate_capacity(capacity)
+
+    def update_image(self, image_url: str) -> None:
+        self.image_url = self.validate_image_url(image_url)
+
+    def publish(self) -> None:
+        if self.status == ActivityStatus.ACTIVE:
+            return
+        self.status = ActivityStatus.ACTIVE
+
+    def close(self) -> None:
+        self.status = ActivityStatus.CLOSED
 
     @staticmethod
     def normalize_name(name: str) -> str:

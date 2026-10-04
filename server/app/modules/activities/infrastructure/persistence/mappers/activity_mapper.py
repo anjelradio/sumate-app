@@ -1,18 +1,14 @@
-"""
-app/modules/activities/infrastructure/persistence/mappers/activity_mapper.py
-
-Traductor puro bidireccional entre la entidad Activity y el modelo ActivityModel.
-"""
-
 from app.modules.activities.domain.entities.activity import Activity
 from app.modules.activities.infrastructure.persistence.models.activity_model import ActivityModel
 
 
 class ActivityMapper:
-    """Mapeo entre entidad de dominio Activity y modelo de persistencia ActivityModel."""
-
     @staticmethod
-    def to_domain(model: ActivityModel, creator_name: str | None = None) -> Activity:
+    def to_domain(
+        model: ActivityModel,
+        creator_name: str | None = None,
+        creator_image: str | None = None,
+    ) -> Activity:
         return Activity(
             id=model.id,
             name=model.name,
@@ -22,6 +18,7 @@ class ActivityMapper:
             capacity=model.capacity,
             status=model.status,
             creator_name=creator_name,
+            creator_image=creator_image,
         )
 
     @staticmethod

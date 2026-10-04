@@ -115,9 +115,9 @@ export function ActivitiesFeed({
             </p>
           </div>
         ) : (
-          <div className="space-y-1">
-            {filteredActivities.map((activity) => (
-              <ActivityCard key={activity.id} activity={activity} scope={scope} />
+          <div className="flex flex-col">
+            {filteredActivities.map((activity, index) => (
+              <ActivityCard key={activity.id} activity={activity} scope={scope} priority={index < 2} />
             ))}
           </div>
         )}

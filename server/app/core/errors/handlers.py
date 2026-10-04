@@ -6,6 +6,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.shared.domain.exceptions import (
     ConflictException,
     DomainException,
+    ForbiddenException,
     NotFoundException,
     ValidationException,
 )
@@ -18,6 +19,10 @@ def format_error(code: str, message: str) -> dict[str, dict[str, str]]:
 
 def setup_exception_handlers(app: FastAPI) -> None:
     # ── 1. Errores de Dominio ─────────────────────────────────────────────────
+
+    @app.exception_handler(ForbiddenException)
+    async def forbidden_handler(request: Request, exc: ForbiddenException):
+        return JSONResponse(status_code=403, content=format_error(exc.code, exc.message))
 
     @app.exception_handler(NotFoundException)
     async def not_found_handler(request: Request, exc: NotFoundException):
@@ -34,6 +39,7 @@ def setup_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(DomainException)
     async def domain_generic_handler(request: Request, exc: DomainException):
         return JSONResponse(status_code=400, content=format_error(exc.code, exc.message))
+
 
     # ── 2. Errores de Pydantic / Validación de Request ────────────────────────
 

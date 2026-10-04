@@ -16,6 +16,7 @@ export type Activity = {
   capacity: number;
   status: ActivityStatus;
   creatorName?: string;
+  creatorImage?: string;
 };
 
 export type ActivityListItem = Pick<
@@ -28,6 +29,22 @@ export type ActivityListItem = Pick<
   | "capacity"
   | "status"
   | "creatorName"
+  | "creatorImage"
 >;
+
+export type ActivityDetail = {
+  id: string;
+  activityId: string;
+  latitude: number | null;
+  longitude: number | null;
+  place: string | null;
+  address: string | null;
+  description: string | null;
+};
+
+export type ActivityDetailData = Activity & {
+  isOwner: boolean;
+  detail: ActivityDetail | null;
+};
 
 export type ActivityScope = "mine" | "others";

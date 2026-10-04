@@ -1,9 +1,3 @@
-"""
-app/modules/activities/domain/exceptions.py
-
-Excepciones de negocio para el módulo de actividades.
-"""
-
 from app.shared.domain.exceptions import NotFoundException, ValidationException
 
 

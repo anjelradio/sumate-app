@@ -42,3 +42,121 @@ export async function createActivityAction(formData: FormData): Promise<ApiActio
 
   return result;
 }
+
+export async function updateActivityLocationAction(
+  id: string,
+  latitude: number,
+  longitude: number,
+  place?: string
+): Promise<ApiActionResult> {
+  if (isNaN(latitude) || isNaN(longitude)) {
+    return errorResult("Coordenadas geográficas inválidas.");
+  }
+
+  const result = await activityRepositoryImpl.updateLocation(id, {
+    latitude,
+    longitude,
+    ...(place?.trim() ? { place: place.trim() } : {}),
+  });
+
+  if (result.ok) {
+    revalidatePath(`/activities/${id}`);
+    revalidatePath("/my-activities");
+    revalidatePath("/explore");
+    updateTag("activities");
+    updateTag(`activity-${id}`);
+  }
+
+  return result;
+}
+
+export async function updateActivityDescriptionAction(
+  id: string,
+  description: string
+): Promise<ApiActionResult> {
+  if (!description || !description.trim()) {
+    return errorResult("La descripción no puede estar vacía.");
+  }
+
+  const result = await activityRepositoryImpl.updateDescription(id, {
+    description: description.trim(),
+  });
+
+  if (result.ok) {
+    revalidatePath(`/activities/${id}`);
+    revalidatePath("/my-activities");
+    revalidatePath("/explore");
+    updateTag("activities");
+    updateTag(`activity-${id}`);
+  }
+
+  return result;
+}
+
+export async function updateActivityImageAction(
+  id: string,
+  formData: FormData
+): Promise<ApiActionResult> {
+  const image = formData.get("image");
+  if (!image || !(image instanceof File) || image.size === 0) {
+    return errorResult("Debes seleccionar una imagen válida.");
+  }
+
+  const result = await activityRepositoryImpl.updateImage(id, formData);
+
+  if (result.ok) {
+    revalidatePath(`/activities/${id}`);
+    revalidatePath("/my-activities");
+    revalidatePath("/explore");
+    updateTag("activities");
+    updateTag(`activity-${id}`);
+  }
+
+  return result;
+}
+
+export async function updateActivityInfoAction(
+  id: string,
+  data: { name?: string; date?: string; capacity?: number }
+): Promise<ApiActionResult> {
+  const result = await activityRepositoryImpl.updateInfo(id, data);
+
+  if (result.ok) {
+    revalidatePath(`/activities/${id}`);
+    revalidatePath("/my-activities");
+    revalidatePath("/explore");
+    updateTag("activities");
+    updateTag(`activity-${id}`);
+  }
+
+  return result;
+}
+
+export async function publishActivityAction(id: string): Promise<ApiActionResult> {
+  const result = await activityRepositoryImpl.publishActivity(id);
+
+  if (result.ok) {
+    revalidatePath(`/activities/${id}`);
+    revalidatePath("/my-activities");
+    revalidatePath("/explore");
+    updateTag("activities");
+    updateTag(`activity-${id}`);
+  }
+
+  return result;
+}
+
+export async function closeActivityAction(id: string): Promise<ApiActionResult> {
+  const result = await activityRepositoryImpl.closeActivity(id);
+
+  if (result.ok) {
+    revalidatePath(`/activities/${id}`);
+    revalidatePath("/my-activities");
+    revalidatePath("/explore");
+    updateTag("activities");
+    updateTag(`activity-${id}`);
+  }
+
+  return result;
+}
+

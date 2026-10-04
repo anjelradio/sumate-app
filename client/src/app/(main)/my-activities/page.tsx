@@ -4,25 +4,11 @@ import { ActivitiesFeed } from "@/features/activities/presentation/components/el
 import { ActivitiesSkeleton } from "@/features/activities/presentation/components/elements/activities-skeleton";
 import { CreateActivitySheet } from "@/features/activities/presentation/components/dialogs/create-activity-sheet";
 
+export const dynamic = "force-dynamic";
+
+
 async function MyActivitiesListContent() {
-  let activities = null;
-  let hasError = false;
-
-  try {
-    activities = await getActivitiesQuery("mine");
-  } catch {
-    hasError = true;
-  }
-
-  if (hasError || !activities) {
-    return (
-      <div className="py-12 px-4 text-center">
-        <p className="text-sm text-red-500 font-medium">
-          No se pudieron cargar tus actividades en este momento. Intenta recargar la página.
-        </p>
-      </div>
-    );
-  }
+  const activities = await getActivitiesQuery("mine");
 
   return (
     <ActivitiesFeed

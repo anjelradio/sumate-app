@@ -6,6 +6,7 @@ import { UploadCloud, X, Loader2 } from "lucide-react";
 import TextFormField from "@/features/shared/presentation/components/forms/text-form-field";
 import { appToast } from "@/features/shared/presentation/components/notifications/toast";
 import { createActivityAction } from "../../actions/activity.action";
+import { CreateActivityFormSchema } from "@/features/activities/infrastructure/schemas/activity.schemas";
 
 type CreateActivityFormProps = {
   onSuccess?: () => void;
@@ -40,20 +41,36 @@ export function CreateActivityForm({ onSuccess }: CreateActivityFormProps) {
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!selectedFile) {
-      appToast.error("Imagen requerida", "Por favor selecciona una imagen para tu actividad.");
-      return;
-    }
-
     const form = e.currentTarget;
     const formData = new FormData(form);
-    formData.set("image", selectedFile);
+    if (selectedFile) {
+      formData.set("image", selectedFile);
+    }
+
+    const payload = {
+      name: formData.get("name"),
+      date: formData.get("date"),
+      capacity: Number(formData.get("capacity")),
+      image: selectedFile,
+    };
+
+    const parsed = CreateActivityFormSchema.safeParse(payload);
+    if (!parsed.success) {
+      appToast.error(
+        "Datos inválidos",
+        parsed.error.issues[0]?.message || "Por favor verifica los campos de la actividad."
+      );
+      return;
+    }
 
     startTransition(async () => {
       const result = await createActivityAction(formData);
 
       if (!result.ok) {
-        appToast.error("Error al crear actividad", result.errors?.[0] || "No se pudo registrar la actividad.");
+        appToast.error(
+          "Error al crear actividad",
+          result.errors?.[0] || "No se pudo registrar la actividad."
+        );
         return;
       }
 

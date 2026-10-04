@@ -24,6 +24,7 @@ class ActivityListItemDTO:
     capacity: int
     status: str
     creator_name: str | None = None
+    creator_image: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,6 +52,7 @@ class ListActivitiesQueryHandler:
                 capacity=activity.capacity,
                 status=activity.status.value if hasattr(activity.status, "value") else str(activity.status),
                 creator_name=activity.creator_name,
+                creator_image=activity.creator_image,
             )
             for activity in activities
         )

@@ -3,25 +3,10 @@ import { getActivitiesQuery } from "@/features/activities/presentation/queries/a
 import { ActivitiesFeed } from "@/features/activities/presentation/components/elements/activities-feed";
 import { ActivitiesSkeleton } from "@/features/activities/presentation/components/elements/activities-skeleton";
 
+export const dynamic = "force-dynamic";
+
 async function ExploreListContent() {
-  let activities = null;
-  let hasError = false;
-
-  try {
-    activities = await getActivitiesQuery("others");
-  } catch {
-    hasError = true;
-  }
-
-  if (hasError || !activities) {
-    return (
-      <div className="py-12 px-4 text-center">
-        <p className="text-sm text-red-500 font-medium">
-          No se pudieron cargar las actividades en este momento. Intenta recargar la página.
-        </p>
-      </div>
-    );
-  }
+  const activities = await getActivitiesQuery("others");
 
   return (
     <ActivitiesFeed

@@ -1,0 +1,79 @@
+"use client";
+
+import { useState, useTransition, type FormEvent } from "react";
+import { Check, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { appToast } from "@/features/shared/presentation/components/notifications/toast";
+import { useSubmitWithSchema } from "@/features/shared/presentation/hooks/use-submit-with-schema";
+import { updateActivityInfoAction } from "../../actions/activity.action";
+import { EditTitleSchema } from "@/features/activities/infrastructure/schemas/activity.schemas";
+
+type EditActivityTitleFormProps = {
+  activityId: string;
+  initialTitle: string;
+  onCancel: () => void;
+  onSuccess: () => void;
+};
+
+export function EditActivityTitleForm({
+  activityId,
+  initialTitle,
+  onCancel,
+  onSuccess,
+}: EditActivityTitleFormProps) {
+  const [title, setTitle] = useState(initialTitle);
+  const [isPending, startTransition] = useTransition();
+  const submitWithSchema = useSubmitWithSchema();
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    startTransition(async () => {
+      await submitWithSchema({
+        schema: EditTitleSchema,
+        payload: { name: title },
+        action: (data) => updateActivityInfoAction(activityId, { name: data.name }),
+        onSuccess: () => {
+          appToast.success("Título actualizado.");
+          onSuccess();
+        },
+        errorTitle: "Error al actualizar título",
+      });
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <input
+        type="text"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className="w-full text-xl font-bold text-slate-900 border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#6355de] focus:outline-none"
+        placeholder="Nombre de la actividad"
+        autoFocus
+      />
+      <div className="grid grid-cols-2 gap-3 w-full pt-1">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isPending}
+          className="w-full rounded-xl cursor-pointer"
+        >
+          Cancelar
+        </Button>
+        <Button
+          type="submit"
+          disabled={isPending}
+          className="w-full bg-[#6355de] hover:bg-[#5446cc] text-white rounded-xl flex items-center justify-center gap-2 cursor-pointer"
+        >
+          {isPending ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Check className="w-4 h-4" />
+          )}
+          Guardar
+        </Button>
+      </div>
+    </form>
+  );
+}

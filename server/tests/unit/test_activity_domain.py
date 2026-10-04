@@ -46,3 +46,32 @@ def test_base_model_soft_delete_and_restore():
 
     model.restore()
     assert model.deleted_date is None
+
+
+def test_list_activities_query_handler_propagates_creator_image():
+    from unittest.mock import MagicMock
+    from app.modules.activities.application.queries.list_activities import (
+        ListActivitiesQuery,
+        ListActivitiesQueryHandler,
+    )
+
+    activity = Activity.create(
+        name="Actividad Prueba",
+        owner_id="usr_123",
+        image_url="https://res.cloudinary.com/test.webp",
+        date=datetime.now(timezone.utc),
+        capacity=5,
+        creator_name="Ana Pérez",
+        creator_image="https://example.com/avatar.jpg",
+    )
+
+    repo = MagicMock()
+    repo.list_activities.return_value = [activity]
+
+    handler = ListActivitiesQueryHandler(repo)
+    result = handler.execute(ListActivitiesQuery(scope="mine", current_user_id="usr_123"))
+
+    assert len(result.items) == 1
+    assert result.items[0].creator_name == "Ana Pérez"
+    assert result.items[0].creator_image == "https://example.com/avatar.jpg"
+
