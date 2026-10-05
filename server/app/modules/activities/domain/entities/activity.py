@@ -3,6 +3,7 @@ from enum import StrEnum
 from uuid import UUID, uuid4
 
 from app.modules.activities.domain.exceptions import (
+    InvalidActivityCapacityException,
     InvalidActivityDateException,
     InvalidActivityImageException,
     InvalidActivityNameException,
@@ -117,7 +118,7 @@ class Activity:
     @staticmethod
     def validate_capacity(capacity: int) -> int:
         if not isinstance(capacity, int) or isinstance(capacity, bool) or capacity <= 0:
-            raise ValueError("La cantidad de plazas debe ser un número entero mayor a cero.")
+            raise InvalidActivityCapacityException("La cantidad de plazas debe ser un número entero mayor a cero.")
         if capacity > 10000:
-            raise ValueError("La cantidad de plazas no puede superar 10,000.")
+            raise InvalidActivityCapacityException("La cantidad de plazas no puede superar 10,000.")
         return capacity

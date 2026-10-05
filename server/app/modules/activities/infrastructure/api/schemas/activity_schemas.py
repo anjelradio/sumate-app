@@ -1,6 +1,41 @@
-from datetime import datetime
+from datetime import datetime, timezone
+from typing import Annotated
 from uuid import UUID
-from sqlmodel import SQLModel
+
+from fastapi import Form
+from sqlmodel import Field, SQLModel
+
+from app.modules.activities.domain.exceptions import InvalidActivityDateException
+
+
+class CreateActivityRequest(SQLModel):
+    """Petición para registrar una nueva actividad."""
+
+    name: str = Field(description="Nombre de la actividad")
+    date: datetime = Field(description="Fecha y hora de realización de la actividad")
+    capacity: int = Field(default=1, description="Cantidad de cupos o plazas")
+
+    @classmethod
+    def as_form(
+        cls,
+        name: Annotated[str, Form(description="Nombre de la actividad")],
+        date: Annotated[str, Form(description="Fecha y hora de realización de la actividad")],
+        capacity: Annotated[int, Form(description="Cantidad de cupos o plazas")] = 1,
+    ) -> "CreateActivityRequest":
+        clean_date_str = date.strip().replace("Z", "+00:00")
+        try:
+            parsed_date = datetime.fromisoformat(clean_date_str)
+            if parsed_date.tzinfo is None:
+                parsed_date = parsed_date.replace(tzinfo=timezone.utc)
+        except ValueError:
+            raise InvalidActivityDateException("El formato de la fecha es inválido. Use ISO 8601 o YYYY-MM-DDTHH:MM.")
+
+        return cls(
+            name=name,
+            date=parsed_date,
+            capacity=capacity,
+        )
+
 
 
 class ActivityListItemRead(SQLModel):

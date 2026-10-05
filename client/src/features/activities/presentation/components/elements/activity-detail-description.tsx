@@ -1,21 +1,20 @@
 "use client";
 
 import { Pencil } from "lucide-react";
+import type { ActivityDetailData } from "@/features/activities/domain/entities/activity.entity";
 import { useActivityDetailUiStore } from "../../stores/activity-detail-ui.store";
 import { EditActivityDescriptionForm } from "../forms/edit-activity-description-form";
 
 type ActivityDetailDescriptionProps = {
-  activityId: string;
-  description: string | null;
-  isOwner: boolean;
+  activity: ActivityDetailData;
 };
 
 export function ActivityDetailDescription({
-  activityId,
-  description,
-  isOwner,
+  activity,
 }: ActivityDetailDescriptionProps) {
   const { isEditMode, activeField, setActiveField } = useActivityDetailUiStore();
+  const { id: activityId, isOwner } = activity;
+  const description = activity.detail?.description ?? null;
 
   const isEditing = activeField === "description";
   const isOtherActive = activeField !== null && activeField !== "description";

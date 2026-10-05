@@ -23,3 +23,10 @@ class InvalidActivityImageException(ValidationException):
     """La URL de la imagen de la actividad es requerida y debe ser válida."""
     code = "INVALID_ACTIVITY_IMAGE"
     message = "La imagen de la actividad es obligatoria."
+
+
+class InvalidActivityCapacityException(ValidationException, ValueError):
+    """La cantidad de cupos o plazas no cumple con las reglas del dominio."""
+    code = "INVALID_CAPACITY"
+    message = "La cantidad de plazas debe ser mayor a cero y no superar 10,000."
+

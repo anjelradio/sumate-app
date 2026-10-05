@@ -2,20 +2,20 @@
 
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Eye, Pencil, Share2 } from "lucide-react";
+import type { ActivityDetailData } from "@/features/activities/domain/entities/activity.entity";
 import { appToast } from "@/features/shared/presentation/components/notifications/toast";
 import { useActivityDetailUiStore } from "../../stores/activity-detail-ui.store";
 
 type ActivityDetailHeaderProps = {
-  activityName: string;
-  isOwner: boolean;
+  activity: ActivityDetailData;
 };
 
 export function ActivityDetailHeader({
-  activityName,
-  isOwner,
+  activity,
 }: ActivityDetailHeaderProps) {
   const router = useRouter();
   const { isEditMode, toggleEditMode } = useActivityDetailUiStore();
+  const { name: activityName, isOwner } = activity;
 
   const handleBack = () => {
     if (window.history.length > 1) {

@@ -5,16 +5,14 @@ import Image from "next/image";
 import { Loader2, LocateFixed, X } from "lucide-react";
 import "leaflet/dist/leaflet.css";
 import { Button } from "@/components/ui/button";
+import type { ActivityDetailData } from "@/features/activities/domain/entities/activity.entity";
 import { appToast } from "@/features/shared/presentation/components/notifications/toast";
 import { updateActivityLocationAction } from "../../actions/activity.action";
 
 type LocationMapSheetProps = {
+  activity: ActivityDetailData;
   isOpen: boolean;
   onClose: () => void;
-  activityId: string;
-  initialLat?: number | null;
-  initialLng?: number | null;
-  initialPlace?: string | null;
 };
 
 // Coordenadas por defecto (Cochabamba, Bolivia)
@@ -22,13 +20,14 @@ const DEFAULT_LAT = -17.3895;
 const DEFAULT_LNG = -66.1568;
 
 export function LocationMapSheet({
+  activity,
   isOpen,
   onClose,
-  activityId,
-  initialLat,
-  initialLng,
-  initialPlace,
 }: LocationMapSheetProps) {
+  const activityId = activity.id;
+  const initialLat = activity.detail?.latitude;
+  const initialLng = activity.detail?.longitude;
+  const initialPlace = activity.detail?.place;
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<any>(null);
   const markerInstanceRef = useRef<any>(null);
@@ -232,7 +231,7 @@ export function LocationMapSheet({
                 Seleccionar Ubicación
               </h2>
               <p className="text-xs text-slate-500">
-                Toca o arrastra el marcador al lugar exacto
+                Haz clic en el mapa para marcar las coordenadas exactas
               </p>
             </div>
           </div>
@@ -265,16 +264,27 @@ export function LocationMapSheet({
         <div className="p-4 sm:p-5 bg-white border-t border-slate-100 space-y-3.5 w-full">
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
-              <span>Nombre del lugar o edificio</span>
+              <span>Nombre o referencia del lugar</span>
               <span className="text-[11px] font-normal text-slate-400">Requerido</span>
             </label>
             <input
               type="text"
+              name="place"
+              autoComplete="off"
               value={place}
               onChange={(e) => setPlace(e.target.value)}
-              placeholder="Ej: Campus Central UMSS, Parque Lincoln, etc."
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleSave();
+                }
+              }}
+              placeholder="Ej: Parque Lincoln, Campus Central UMSS, Auditorio..."
               className="w-full text-sm font-medium text-slate-900 border border-slate-300 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-[#6355de] focus:border-transparent focus:outline-none transition-all placeholder:text-slate-400"
             />
+            <p className="text-[11px] text-slate-500 leading-normal">
+              Indica el nombre del sitio o punto de encuentro. La dirección detallada se obtendrá automáticamente con las coordenadas fijadas en el mapa.
+            </p>
           </div>
 
           <Button

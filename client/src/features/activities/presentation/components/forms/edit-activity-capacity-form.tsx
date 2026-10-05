@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition, type FormEvent } from "react";
+import { useState } from "react";
 import Image from "next/image";
-import { Check, Loader2 } from "lucide-react";
+import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/features/shared/presentation/components/custom-buttons/submit-button";
 import { appToast } from "@/features/shared/presentation/components/notifications/toast";
 import { useSubmitWithSchema } from "@/features/shared/presentation/hooks/use-submit-with-schema";
 import { updateActivityInfoAction } from "../../actions/activity.action";
@@ -23,30 +24,26 @@ export function EditActivityCapacityForm({
   onSuccess,
 }: EditActivityCapacityFormProps) {
   const [capacityValue, setCapacityValue] = useState<number | string>(initialCapacity);
-  const [isPending, startTransition] = useTransition();
   const submitWithSchema = useSubmitWithSchema();
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    startTransition(async () => {
-      await submitWithSchema({
-        schema: EditCapacitySchema,
-        payload: { capacity: Number(capacityValue) },
-        action: (data) =>
-          updateActivityInfoAction(activityId, {
-            capacity: Number(data.capacity),
-          }),
-        onSuccess: () => {
-          appToast.success("Cupos actualizados.");
-          onSuccess();
-        },
-        errorTitle: "Error al actualizar cupos",
-      });
+  const handleSubmit = async () => {
+    await submitWithSchema({
+      schema: EditCapacitySchema,
+      payload: { capacity: Number(capacityValue) },
+      action: (data) =>
+        updateActivityInfoAction(activityId, {
+          capacity: Number(data.capacity),
+        }),
+      onSuccess: () => {
+        appToast.success("Cupos actualizados.");
+        onSuccess();
+      },
+      errorTitle: "Error al actualizar cupos",
     });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="pb-4 border-b border-slate-100/90 space-y-3 w-full">
+    <form action={handleSubmit} className="pb-4 border-b border-slate-100/90 space-y-3 w-full">
       <div className="flex items-center">
         <div className="shrink-0 flex items-center justify-center mr-6">
           <Image
@@ -82,23 +79,16 @@ export function EditActivityCapacityForm({
           type="button"
           variant="outline"
           onClick={onCancel}
-          disabled={isPending}
           className="w-full rounded-xl cursor-pointer"
         >
           Cancelar
         </Button>
-        <Button
-          type="submit"
-          disabled={isPending}
-          className="w-full bg-[#6355de] hover:bg-[#5446cc] text-white rounded-xl flex items-center justify-center gap-2 cursor-pointer"
-        >
-          {isPending ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Check className="w-4 h-4" />
-          )}
-          Guardar
-        </Button>
+        <SubmitButton
+          text="Guardar"
+          pendingText="Guardando..."
+          icon={<Check className="w-4 h-4" />}
+          className="w-full bg-[#6355de] hover:bg-[#5446cc] text-white rounded-xl"
+        />
       </div>
     </form>
   );

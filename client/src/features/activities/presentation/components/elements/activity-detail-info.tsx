@@ -2,19 +2,14 @@
 
 import Image from "next/image";
 import { Map, Pencil, Plus } from "lucide-react";
-import type { ActivityDetail } from "@/features/activities/domain/entities/activity.entity";
+import type { ActivityDetailData } from "@/features/activities/domain/entities/activity.entity";
 import { useActivityDetailUiStore } from "../../stores/activity-detail-ui.store";
 import { EditActivityTitleForm } from "../forms/edit-activity-title-form";
 import { EditActivityDateForm } from "../forms/edit-activity-date-form";
 import { EditActivityCapacityForm } from "../forms/edit-activity-capacity-form";
 
 type ActivityDetailInfoProps = {
-  activityId: string;
-  name: string;
-  date: string;
-  capacity: number;
-  isOwner: boolean;
-  detail: ActivityDetail | null;
+  activity: ActivityDetailData;
 };
 
 function formatDetailedDate(dateString: string): { fullDate: string; time: string } {
@@ -113,13 +108,9 @@ function toLocalDatetimeString(dateString: string): string {
 }
 
 export function ActivityDetailInfo({
-  activityId,
-  name,
-  date,
-  capacity,
-  isOwner,
-  detail,
+  activity,
 }: ActivityDetailInfoProps) {
+  const { id: activityId, name, date, capacity, isOwner, detail } = activity;
   const { isEditMode, activeField, setActiveField, openLocationSheet } =
     useActivityDetailUiStore();
 

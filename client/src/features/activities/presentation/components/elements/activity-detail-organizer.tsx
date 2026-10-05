@@ -1,16 +1,16 @@
 import Image from "next/image";
+import type { ActivityDetailData } from "@/features/activities/domain/entities/activity.entity";
 
 type ActivityDetailOrganizerProps = {
-  creatorName?: string;
-  creatorImage?: string;
+  activity: ActivityDetailData;
 };
 
 export function ActivityDetailOrganizer({
-  creatorName,
-  creatorImage,
+  activity,
 }: ActivityDetailOrganizerProps) {
-  const name = creatorName || "Organizador";
+  const name = activity.creatorName || "Organizador";
   const initial = name.charAt(0).toUpperCase();
+  const creatorImage = activity.creatorImage;
 
   return (
     <section

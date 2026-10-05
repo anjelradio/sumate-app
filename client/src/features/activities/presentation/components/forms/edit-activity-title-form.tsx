@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useTransition, type FormEvent } from "react";
-import { Check, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/features/shared/presentation/components/custom-buttons/submit-button";
 import { appToast } from "@/features/shared/presentation/components/notifications/toast";
 import { useSubmitWithSchema } from "@/features/shared/presentation/hooks/use-submit-with-schema";
 import { updateActivityInfoAction } from "../../actions/activity.action";
@@ -22,27 +23,23 @@ export function EditActivityTitleForm({
   onSuccess,
 }: EditActivityTitleFormProps) {
   const [title, setTitle] = useState(initialTitle);
-  const [isPending, startTransition] = useTransition();
   const submitWithSchema = useSubmitWithSchema();
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    startTransition(async () => {
-      await submitWithSchema({
-        schema: EditTitleSchema,
-        payload: { name: title },
-        action: (data) => updateActivityInfoAction(activityId, { name: data.name }),
-        onSuccess: () => {
-          appToast.success("Título actualizado.");
-          onSuccess();
-        },
-        errorTitle: "Error al actualizar título",
-      });
+  const handleSubmit = async () => {
+    await submitWithSchema({
+      schema: EditTitleSchema,
+      payload: { name: title },
+      action: (data) => updateActivityInfoAction(activityId, { name: data.name }),
+      onSuccess: () => {
+        appToast.success("Título actualizado.");
+        onSuccess();
+      },
+      errorTitle: "Error al actualizar título",
     });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
+    <form action={handleSubmit} className="space-y-3">
       <input
         type="text"
         value={title}
@@ -56,23 +53,16 @@ export function EditActivityTitleForm({
           type="button"
           variant="outline"
           onClick={onCancel}
-          disabled={isPending}
           className="w-full rounded-xl cursor-pointer"
         >
           Cancelar
         </Button>
-        <Button
-          type="submit"
-          disabled={isPending}
-          className="w-full bg-[#6355de] hover:bg-[#5446cc] text-white rounded-xl flex items-center justify-center gap-2 cursor-pointer"
-        >
-          {isPending ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Check className="w-4 h-4" />
-          )}
-          Guardar
-        </Button>
+        <SubmitButton
+          text="Guardar"
+          pendingText="Guardando..."
+          icon={<Check className="w-4 h-4" />}
+          className="w-full bg-[#6355de] hover:bg-[#5446cc] text-white rounded-xl"
+        />
       </div>
     </form>
   );

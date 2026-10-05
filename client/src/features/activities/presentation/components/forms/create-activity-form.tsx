@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useRef, useTransition, type FormEvent } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
-import { UploadCloud, X, Loader2 } from "lucide-react";
+import { UploadCloud, X } from "lucide-react";
 import TextFormField from "@/features/shared/presentation/components/forms/text-form-field";
 import { appToast } from "@/features/shared/presentation/components/notifications/toast";
+import { SubmitButton } from "@/features/shared/presentation/components/custom-buttons/submit-button";
 import { createActivityAction } from "../../actions/activity.action";
 import { CreateActivityFormSchema } from "@/features/activities/infrastructure/schemas/activity.schemas";
 
@@ -15,8 +16,8 @@ type CreateActivityFormProps = {
 export function CreateActivityForm({ onSuccess }: CreateActivityFormProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -38,11 +39,7 @@ export function CreateActivityForm({ onSuccess }: CreateActivityFormProps) {
     }
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    const form = e.currentTarget;
-    const formData = new FormData(form);
+  const handleSubmit = async (formData: FormData) => {
     if (selectedFile) {
       formData.set("image", selectedFile);
     }
@@ -63,26 +60,24 @@ export function CreateActivityForm({ onSuccess }: CreateActivityFormProps) {
       return;
     }
 
-    startTransition(async () => {
-      const result = await createActivityAction(formData);
+    const result = await createActivityAction(formData);
 
-      if (!result.ok) {
-        appToast.error(
-          "Error al crear actividad",
-          result.errors?.[0] || "No se pudo registrar la actividad."
-        );
-        return;
-      }
+    if (!result.ok) {
+      appToast.error(
+        "Error al crear actividad",
+        result.errors?.[0] || "No se pudo registrar la actividad."
+      );
+      return;
+    }
 
-      appToast.success("¡Actividad creada exitosamente!");
-      handleRemoveImage();
-      form.reset();
-      onSuccess?.();
-    });
+    appToast.success("¡Actividad creada exitosamente!");
+    handleRemoveImage();
+    formRef.current?.reset();
+    onSuccess?.();
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 text-left">
+    <form ref={formRef} action={handleSubmit} className="space-y-5 text-left">
       {/* Slot de selección y previsualización de imagen */}
       <div className="space-y-2">
         <label className="block text-[15px] font-bold text-zinc-900">
@@ -168,20 +163,11 @@ export function CreateActivityForm({ onSuccess }: CreateActivityFormProps) {
 
       {/* Botón de acción */}
       <div className="pt-2">
-        <button
-          type="submit"
-          disabled={isPending}
-          className="w-full py-3.5 px-4 rounded-2xl bg-[#6355DE] text-white font-bold text-base shadow-lg shadow-[#6355DE]/25 hover:bg-[#5243CE] active:scale-[0.99] disabled:opacity-60 transition duration-200 flex items-center justify-center gap-2 cursor-pointer"
-        >
-          {isPending ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              <span>Registrando actividad...</span>
-            </>
-          ) : (
-            <span>Registrar actividad</span>
-          )}
-        </button>
+        <SubmitButton
+          text="Registrar actividad"
+          pendingText="Registrando actividad..."
+          className="w-full py-3.5 px-4 rounded-2xl bg-[#6355DE] hover:bg-[#5243CE] text-white font-bold text-base shadow-lg shadow-[#6355DE]/25 active:scale-[0.99] transition duration-200"
+        />
       </div>
     </form>
   );

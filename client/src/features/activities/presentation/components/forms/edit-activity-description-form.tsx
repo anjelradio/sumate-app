@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useTransition, type FormEvent } from "react";
-import { Check, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/features/shared/presentation/components/custom-buttons/submit-button";
 import { appToast } from "@/features/shared/presentation/components/notifications/toast";
 import { useSubmitWithSchema } from "@/features/shared/presentation/hooks/use-submit-with-schema";
 import { updateActivityDescriptionAction } from "../../actions/activity.action";
@@ -22,28 +23,24 @@ export function EditActivityDescriptionForm({
   onSuccess,
 }: EditActivityDescriptionFormProps) {
   const [descriptionText, setDescriptionText] = useState(initialDescription ?? "");
-  const [isPending, startTransition] = useTransition();
   const submitWithSchema = useSubmitWithSchema();
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    startTransition(async () => {
-      await submitWithSchema({
-        schema: EditDescriptionSchema,
-        payload: { description: descriptionText },
-        action: (data) =>
-          updateActivityDescriptionAction(activityId, data.description),
-        onSuccess: () => {
-          appToast.success("Descripción actualizada.");
-          onSuccess();
-        },
-        errorTitle: "Error al actualizar descripción",
-      });
+  const handleSubmit = async () => {
+    await submitWithSchema({
+      schema: EditDescriptionSchema,
+      payload: { description: descriptionText },
+      action: (data) =>
+        updateActivityDescriptionAction(activityId, data.description),
+      onSuccess: () => {
+        appToast.success("Descripción actualizada.");
+        onSuccess();
+      },
+      errorTitle: "Error al actualizar descripción",
     });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
+    <form action={handleSubmit} className="space-y-3">
       <textarea
         rows={5}
         value={descriptionText}
@@ -57,23 +54,16 @@ export function EditActivityDescriptionForm({
           type="button"
           variant="outline"
           onClick={onCancel}
-          disabled={isPending}
           className="w-full rounded-xl cursor-pointer"
         >
           Cancelar
         </Button>
-        <Button
-          type="submit"
-          disabled={isPending}
-          className="w-full bg-[#6355de] hover:bg-[#5446cc] text-white rounded-xl flex items-center justify-center gap-2 cursor-pointer"
-        >
-          {isPending ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Check className="w-4 h-4" />
-          )}
-          Guardar
-        </Button>
+        <SubmitButton
+          text="Guardar"
+          pendingText="Guardando..."
+          icon={<Check className="w-4 h-4" />}
+          className="w-full bg-[#6355de] hover:bg-[#5446cc] text-white rounded-xl"
+        />
       </div>
     </form>
   );

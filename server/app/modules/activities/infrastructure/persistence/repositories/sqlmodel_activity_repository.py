@@ -1,19 +1,25 @@
 from datetime import datetime, timezone
 from uuid import UUID
-from sqlmodel import Session, select
 
 from app.modules.activities.domain.entities.activity import Activity
 from app.modules.activities.domain.entities.activity_detail import ActivityDetail
-from app.modules.activities.domain.repositories.activity_repository import ActivityRepository
+from app.modules.activities.domain.repositories.activity_repository import (
+    ActivityRepository,
+)
 from app.modules.activities.infrastructure.persistence.mappers.activity_detail_mapper import (
     ActivityDetailMapper,
 )
-from app.modules.activities.infrastructure.persistence.mappers.activity_mapper import ActivityMapper
+from app.modules.activities.infrastructure.persistence.mappers.activity_mapper import (
+    ActivityMapper,
+)
 from app.modules.activities.infrastructure.persistence.models.activity_detail_model import (
     ActivityDetailModel,
 )
-from app.modules.activities.infrastructure.persistence.models.activity_model import ActivityModel
+from app.modules.activities.infrastructure.persistence.models.activity_model import (
+    ActivityModel,
+)
 from app.shared.infrastructure.db.better_auth import BetterAuthUser
+from sqlmodel import Session, select
 
 
 class SQLModelActivityRepository(ActivityRepository):

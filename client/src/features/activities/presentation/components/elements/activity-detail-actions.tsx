@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Check, CheckCircle2, Loader2, Lock, Rocket } from "lucide-react";
-import type { ActivityStatus } from "@/features/activities/domain/entities/activity.entity";
+import type { ActivityDetailData } from "@/features/activities/domain/entities/activity.entity";
 import { appToast } from "@/features/shared/presentation/components/notifications/toast";
 import {
   closeActivityAction,
@@ -10,20 +10,17 @@ import {
 } from "../../actions/activity.action";
 
 type ActivityDetailActionsProps = {
-  activityId: string;
-  status: ActivityStatus;
-  isOwner: boolean;
-  hasLocation: boolean;
-  hasDescription: boolean;
+  activity: ActivityDetailData;
 };
 
 export function ActivityDetailActions({
-  activityId,
-  status,
-  isOwner,
-  hasLocation,
-  hasDescription,
+  activity,
 }: ActivityDetailActionsProps) {
+  const { id: activityId, status, isOwner, detail } = activity;
+  const hasLocation = Boolean(
+    detail?.latitude != null && detail?.longitude != null
+  );
+  const hasDescription = Boolean(detail?.description?.trim());
   const [isPending, startTransition] = useTransition();
   const [hasJoined, setHasJoined] = useState(false);
 

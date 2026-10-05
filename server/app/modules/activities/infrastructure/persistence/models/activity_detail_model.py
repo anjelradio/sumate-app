@@ -1,7 +1,7 @@
 from uuid import UUID
-from sqlmodel import Field
 
 from app.shared.infrastructure.db.base_model import BaseModel
+from sqlmodel import Field
 
 
 class ActivityDetailModel(BaseModel, table=True):

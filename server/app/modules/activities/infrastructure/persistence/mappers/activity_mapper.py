@@ -1,5 +1,7 @@
 from app.modules.activities.domain.entities.activity import Activity
-from app.modules.activities.infrastructure.persistence.models.activity_model import ActivityModel
+from app.modules.activities.infrastructure.persistence.models.activity_model import (
+    ActivityModel,
+)
 
 
 class ActivityMapper:

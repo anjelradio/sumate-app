@@ -1,14 +1,7 @@
-"""
-app/modules/activities/infrastructure/persistence/models/activity_model.py
-
-Modelo de persistencia SQLModel para actividades.
-Hereda de BaseModel (soft-delete vía deleted_date, id UUIDv4, created_date, modified_date).
-"""
-
 from datetime import datetime
-from sqlmodel import Field
 
 from app.shared.infrastructure.db.base_model import BaseModel
+from sqlmodel import Field
 
 
 class ActivityModel(BaseModel, table=True):

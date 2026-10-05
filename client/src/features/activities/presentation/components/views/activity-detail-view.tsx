@@ -25,70 +25,33 @@ export function ActivityDetailView({ activity }: ActivityDetailViewProps) {
     };
   }, [reset]);
 
-  const hasLocation = Boolean(
-    activity.detail?.latitude != null && activity.detail?.longitude != null
-  );
-  const hasDescription = Boolean(activity.detail?.description?.trim());
-
   return (
     <div className="min-h-screen bg-white text-slate-900 flex flex-col justify-between selection:bg-indigo-100">
       <main className="w-full max-w-md mx-auto flex-1 pb-28 px-5 pt-2 sm:pt-4">
         {/* Cabecera superior con volver atrás, compartir y toggle de edición */}
-        <ActivityDetailHeader
-          activityName={activity.name}
-          isOwner={activity.isOwner}
-        />
+        <ActivityDetailHeader activity={activity} />
 
         {/* Foto de portada y badge de estado */}
-        <ActivityDetailHero
-          activityId={activity.id}
-          imageUrl={activity.imageUrl}
-          activityName={activity.name}
-          status={activity.status}
-          isOwner={activity.isOwner}
-        />
+        <ActivityDetailHero activity={activity} />
 
         {/* Título, Fecha y Hora, Cupos y Ubicación */}
-        <ActivityDetailInfo
-          activityId={activity.id}
-          name={activity.name}
-          date={activity.date}
-          capacity={activity.capacity}
-          isOwner={activity.isOwner}
-          detail={activity.detail}
-        />
+        <ActivityDetailInfo activity={activity} />
 
         {/* Descripción de la actividad */}
-        <ActivityDetailDescription
-          activityId={activity.id}
-          description={activity.detail?.description ?? null}
-          isOwner={activity.isOwner}
-        />
+        <ActivityDetailDescription activity={activity} />
 
         {/* Sección del organizador */}
-        <ActivityDetailOrganizer
-          creatorName={activity.creatorName}
-          creatorImage={activity.creatorImage}
-        />
+        <ActivityDetailOrganizer activity={activity} />
       </main>
 
       {/* Botón flotante de acción (Asistiré / Publicar / Cerrar convocatoria) */}
-      <ActivityDetailActions
-        activityId={activity.id}
-        status={activity.status}
-        isOwner={activity.isOwner}
-        hasLocation={hasLocation}
-        hasDescription={hasDescription}
-      />
+      <ActivityDetailActions activity={activity} />
 
       {/* Bottom Sheet con mapa Leaflet para edición de ubicación */}
       <LocationMapSheet
+        activity={activity}
         isOpen={isLocationSheetOpen}
         onClose={closeLocationSheet}
-        activityId={activity.id}
-        initialLat={activity.detail?.latitude}
-        initialLng={activity.detail?.longitude}
-        initialPlace={activity.detail?.place}
       />
     </div>
   );

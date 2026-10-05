@@ -3,26 +3,19 @@
 import { useRef, useTransition } from "react";
 import Image from "next/image";
 import { Camera, Loader2 } from "lucide-react";
-import type { ActivityStatus } from "@/features/activities/domain/entities/activity.entity";
+import type { ActivityDetailData } from "@/features/activities/domain/entities/activity.entity";
 import { appToast } from "@/features/shared/presentation/components/notifications/toast";
 import { updateActivityImageAction } from "../../actions/activity.action";
 import { useActivityDetailUiStore } from "../../stores/activity-detail-ui.store";
 
 type ActivityDetailHeroProps = {
-  activityId: string;
-  imageUrl: string;
-  activityName: string;
-  status: ActivityStatus;
-  isOwner: boolean;
+  activity: ActivityDetailData;
 };
 
 export function ActivityDetailHero({
-  activityId,
-  imageUrl,
-  activityName,
-  status,
-  isOwner,
+  activity,
 }: ActivityDetailHeroProps) {
+  const { id: activityId, imageUrl, name: activityName, status, isOwner } = activity;
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isPending, startTransition] = useTransition();
   const { isEditMode } = useActivityDetailUiStore();

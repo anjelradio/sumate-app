@@ -75,3 +75,36 @@ def test_list_activities_query_handler_propagates_creator_image():
     assert result.items[0].creator_name == "Ana Pérez"
     assert result.items[0].creator_image == "https://example.com/avatar.jpg"
 
+
+def test_invalid_activity_capacity_exception():
+    from app.modules.activities.domain.exceptions import InvalidActivityCapacityException
+    from app.shared.domain.exceptions import ValidationException
+
+    with pytest.raises(InvalidActivityCapacityException) as exc_info:
+        Activity.create(
+            name="Exceso de Plazas",
+            owner_id="usr_123",
+            image_url="https://res.cloudinary.com/test.webp",
+            date=datetime.now(timezone.utc),
+            capacity=10001,
+        )
+    assert isinstance(exc_info.value, ValidationException)
+    assert isinstance(exc_info.value, ValueError)
+
+
+def test_create_activity_request_as_form():
+    from app.modules.activities.infrastructure.api.schemas.activity_schemas import (
+        CreateActivityRequest,
+    )
+
+    req = CreateActivityRequest.as_form(
+        name="Taller de Cocina",
+        date="2026-12-01T15:30:00Z",
+        capacity=20,
+    )
+    assert req.name == "Taller de Cocina"
+    assert req.capacity == 20
+    assert req.date.year == 2026
+    assert req.date.tzinfo is not None
+
+
