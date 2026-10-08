@@ -35,28 +35,6 @@ export function RecentlyFeed({ participations }: RecentlyFeedProps) {
     return participations;
   }, [participations, activeFilter]);
 
-  const getEmptyState = () => {
-    switch (activeFilter) {
-      case "upcoming":
-        return {
-          title: "Sin actividades próximas",
-          message: "No tienes actividades programadas próximamente.",
-        };
-      case "past":
-        return {
-          title: "Sin actividades realizadas",
-          message: "Aún no cuentas con actividades completadas en tu historial.",
-        };
-      default:
-        return {
-          title: "Sin participaciones",
-          message: "Aún no te has sumado a ninguna actividad. ¡Explora y participa!",
-        };
-    }
-  };
-
-  const emptyState = getEmptyState();
-
   return (
     <div className="flex-1 flex flex-col min-h-0 h-full" data-purpose="recently-feed-wrapper">
       <ActivitiesFilterBar<ParticipationFilter>
@@ -71,9 +49,9 @@ export function RecentlyFeed({ participations }: RecentlyFeedProps) {
             <div className="w-16 h-16 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center mb-3">
               <Clock className="w-8 h-8" />
             </div>
-            <h3 className="text-lg font-bold text-zinc-800">{emptyState.title}</h3>
+            <h3 className="text-lg font-bold text-zinc-800">Sin participaciones</h3>
             <p className="text-sm text-zinc-500 mt-1 max-w-xs leading-relaxed">
-              {emptyState.message}
+              Aún no te has sumado a ninguna actividad. ¡Explora y participa!
             </p>
           </div>
         ) : (

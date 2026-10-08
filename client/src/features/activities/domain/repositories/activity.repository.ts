@@ -82,5 +82,15 @@ export interface ActivityRepository {
    * Cierra la convocatoria de la actividad.
    */
   closeActivity(id: string): Promise<ApiActionResult>;
+
+  /**
+   * Reabre la convocatoria de una actividad cerrada.
+   */
+  reopenActivity(id: string): Promise<ApiActionResult>;
+
+  /**
+   * Elimina una actividad creada por el usuario (físicamente, si no tiene participantes).
+   */
+  deleteActivity(id: string): Promise<ApiActionResult>;
 }
 

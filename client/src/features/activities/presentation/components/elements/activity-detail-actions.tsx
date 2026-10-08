@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Check, CheckCircle2, Loader2, Lock, Rocket } from "lucide-react";
+import { Check, CheckCircle2, Loader2, Lock, Rocket, RotateCcw } from "lucide-react";
 import type { ActivityDetailData } from "@/features/activities/domain/entities/activity.entity";
 import { appToast } from "@/features/shared/presentation/components/notifications/toast";
 import {
   closeActivityAction,
   publishActivityAction,
+  reopenActivityAction,
 } from "../../actions/activity.action";
 import {
   joinActivityAction,
@@ -103,6 +104,32 @@ export function ActivityDetailActions({
       appToast.success("Convocatoria cerrada exitosamente.");
     });
   };
+
+  const handleReopen = () => {
+    if (isPast) {
+      appToast.error(
+        "No se puede reabrir",
+        "La fecha de la actividad ya ha transcurrido."
+      );
+      return;
+    }
+
+    startTransition(async () => {
+      const res = await reopenActivityAction(activityId);
+      if (!res.ok) {
+        appToast.error(
+          "Error al reabrir",
+          res.errors?.[0] ?? "No se pudo reabrir la convocatoria."
+        );
+        return;
+      }
+      appToast.success("Convocatoria reabierta exitosamente.");
+    });
+  };
+
+  if (isPast) {
+    return null;
+  }
 
   return (
     <>
@@ -211,14 +238,34 @@ export function ActivityDetailActions({
             </>
           )}
         </button>
-      ) : (
+      ) : isPast ? (
         <button
           type="button"
           disabled
           className="pointer-events-auto flex items-center justify-center gap-2 px-5 py-3.5 rounded-full bg-slate-300 text-slate-600 font-semibold text-sm cursor-not-allowed shadow-sm"
         >
           <Lock className="w-4 h-4" />
-          <span>Convocatoria cerrada</span>
+          <span>Evento finalizado (Cerrado)</span>
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={handleReopen}
+          disabled={isPending}
+          aria-label="Reabrir convocatoria"
+          className="pointer-events-auto flex items-center justify-center gap-2 px-5 py-3.5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/35 transition-all hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 font-semibold text-sm disabled:opacity-50 cursor-pointer"
+        >
+          {isPending ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span>Reabriendo...</span>
+            </>
+          ) : (
+            <>
+              <RotateCcw className="w-4 h-4" />
+              <span>Reabrir convocatoria</span>
+            </>
+          )}
         </button>
       )}
       </div>

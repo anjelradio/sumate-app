@@ -203,3 +203,15 @@ class SQLModelActivityRepository(ActivityRepository):
         )
         detail = ActivityDetailMapper.to_domain(detail_model) if detail_model else None
         return (activity, detail)
+
+    def delete(self, activity: Activity) -> None:
+        statement_detail = select(ActivityDetailModel).where(
+            ActivityDetailModel.activity_id == activity.id
+        )
+        detail_record = self.db.exec(statement_detail).first()
+        if detail_record:
+            self.db.delete(detail_record)
+
+        record = self.db.get(ActivityModel, activity.id)
+        if record:
+            self.db.delete(record)

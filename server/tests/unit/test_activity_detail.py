@@ -11,6 +11,14 @@ from app.modules.activities.application.use_cases.close_activity import (
     CloseActivityCommand,
     CloseActivityUseCase,
 )
+from app.modules.activities.application.use_cases.delete_activity import (
+    DeleteActivityCommand,
+    DeleteActivityUseCase,
+)
+from app.modules.activities.application.use_cases.reopen_activity import (
+    ReopenActivityCommand,
+    ReopenActivityUseCase,
+)
 from app.modules.activities.application.use_cases.publish_activity import (
     PublishActivityCommand,
     PublishActivityUseCase,
@@ -183,6 +191,120 @@ def test_close_activity_only_owner():
     assert result.status == ActivityStatus.CLOSED
     repo.save.assert_called_once_with(activity)
     uow.commit.assert_called_once()
+
+
+def test_reopen_activity_future_success():
+    activity_id = uuid4()
+    owner_id = "user_owner"
+
+    activity = Activity(
+        id=activity_id,
+        name="Actividad Cerrada Futura",
+        owner_id=owner_id,
+        image_url="https://res.cloudinary.com/test.webp",
+        date=datetime.now(timezone.utc) + timedelta(days=2),
+        capacity=10,
+        status=ActivityStatus.CLOSED,
+    )
+
+    repo = MagicMock()
+    repo.get_by_id.return_value = activity
+    uow = MagicMock()
+
+    use_case = ReopenActivityUseCase(repo, uow)
+    result = use_case.execute(
+        ReopenActivityCommand(activity_id=activity_id, owner_id=owner_id)
+    )
+
+    assert result.status == ActivityStatus.ACTIVE
+    repo.save.assert_called_once_with(activity)
+    uow.commit.assert_called_once()
+
+
+def test_reopen_activity_past_rejected():
+    activity_id = uuid4()
+    owner_id = "user_owner"
+
+    activity = Activity(
+        id=activity_id,
+        name="Actividad Cerrada Pasada",
+        owner_id=owner_id,
+        image_url="https://res.cloudinary.com/test.webp",
+        date=datetime.now(timezone.utc) - timedelta(days=1),
+        capacity=10,
+        status=ActivityStatus.CLOSED,
+    )
+
+    repo = MagicMock()
+    repo.get_by_id.return_value = activity
+    uow = MagicMock()
+
+    use_case = ReopenActivityUseCase(repo, uow)
+    with pytest.raises(ValidationException, match="fecha ya ha transcurrido"):
+        use_case.execute(
+            ReopenActivityCommand(activity_id=activity_id, owner_id=owner_id)
+        )
+
+
+def test_delete_activity_success():
+    activity_id = uuid4()
+    owner_id = "user_owner"
+
+    activity = Activity(
+        id=activity_id,
+        name="Actividad Sin Inscritos",
+        owner_id=owner_id,
+        image_url="https://res.cloudinary.com/test.webp",
+        date=datetime.now(timezone.utc) + timedelta(days=2),
+        capacity=10,
+        status=ActivityStatus.ACTIVE,
+    )
+
+    act_repo = MagicMock()
+    act_repo.get_by_id.return_value = activity
+
+    part_repo = MagicMock()
+    part_repo.list_participants_by_activity_id.return_value = []
+
+    uow = MagicMock()
+
+    use_case = DeleteActivityUseCase(act_repo, part_repo, uow)
+    use_case.execute(DeleteActivityCommand(activity_id=activity_id, owner_id=owner_id))
+
+    act_repo.delete.assert_called_once_with(activity)
+    uow.commit.assert_called_once()
+
+
+def test_delete_activity_with_participants_rejected():
+    activity_id = uuid4()
+    owner_id = "user_owner"
+
+    activity = Activity(
+        id=activity_id,
+        name="Actividad Con Inscritos",
+        owner_id=owner_id,
+        image_url="https://res.cloudinary.com/test.webp",
+        date=datetime.now(timezone.utc) + timedelta(days=2),
+        capacity=10,
+        status=ActivityStatus.ACTIVE,
+    )
+
+    act_repo = MagicMock()
+    act_repo.get_by_id.return_value = activity
+
+    part_repo = MagicMock()
+    participation = Participation.create(activity_id=activity_id, user_id="user_2")
+    part_repo.list_participants_by_activity_id.return_value = [
+        (participation, "Ana Lopez", "https://avatar.com/ana.png")
+    ]
+
+    uow = MagicMock()
+
+    use_case = DeleteActivityUseCase(act_repo, part_repo, uow)
+    with pytest.raises(ValidationException, match="participantes inscritos"):
+        use_case.execute(
+            DeleteActivityCommand(activity_id=activity_id, owner_id=owner_id)
+        )
 
 
 def test_get_activity_detail_with_participants():

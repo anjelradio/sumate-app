@@ -18,9 +18,17 @@ from app.modules.activities.application.use_cases.close_activity import (
     CloseActivityCommand,
     CloseActivityUseCase,
 )
+from app.modules.activities.application.use_cases.reopen_activity import (
+    ReopenActivityCommand,
+    ReopenActivityUseCase,
+)
 from app.modules.activities.application.use_cases.create_activity import (
     CreateActivityCommand,
     CreateActivityUseCase,
+)
+from app.modules.activities.application.use_cases.delete_activity import (
+    DeleteActivityCommand,
+    DeleteActivityUseCase,
 )
 from app.modules.activities.application.use_cases.publish_activity import (
     PublishActivityCommand,
@@ -400,5 +408,52 @@ def close_activity(
         )
     )
     return Response(status_code=status.HTTP_200_OK)
+
+
+@router.post(
+    "/{activity_id}/reopen",
+    status_code=status.HTTP_200_OK,
+    summary="Reabrir convocatoria de la actividad",
+)
+def reopen_activity(
+    activity_id: UUID,
+    current_user: CurrentUser,
+    uow: UoWDep,
+) -> Response:
+    repository = SQLModelActivityRepository(uow.session)
+    use_case = ReopenActivityUseCase(repository, uow)
+    use_case.execute(
+        ReopenActivityCommand(
+            activity_id=activity_id,
+            owner_id=current_user.user_id,
+        )
+    )
+    return Response(status_code=status.HTTP_200_OK)
+
+
+@router.delete(
+    "/{activity_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Eliminar físicamente una actividad",
+)
+def delete_activity(
+    activity_id: UUID,
+    current_user: CurrentUser,
+    uow: UoWDep,
+) -> Response:
+    activity_repo = SQLModelActivityRepository(uow.session)
+    participation_repo = SQLModelParticipationRepository(uow.session)
+    use_case = DeleteActivityUseCase(
+        activity_repository=activity_repo,
+        participation_repository=participation_repo,
+        uow=uow,
+    )
+    use_case.execute(
+        DeleteActivityCommand(
+            activity_id=activity_id,
+            owner_id=current_user.user_id,
+        )
+    )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

@@ -45,3 +45,7 @@ class ActivityRepository(ABC):
         self, activity_id: UUID
     ) -> tuple[Activity, ActivityDetail | None] | None:
         ...
+
+    @abstractmethod
+    def delete(self, activity: Activity) -> None:
+        ...

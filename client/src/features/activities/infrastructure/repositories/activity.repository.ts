@@ -143,5 +143,21 @@ export const activityRepositoryImpl: ActivityRepository = {
       fallbackMessage: "Error al cerrar la convocatoria de la actividad.",
     });
   },
+
+  async reopenActivity(id: string): Promise<ApiActionResult> {
+    return apiRequestStatus({
+      url: `${BASE_URL}/${id}/reopen`,
+      method: "POST",
+      fallbackMessage: "Error al reabrir la convocatoria de la actividad.",
+    });
+  },
+
+  async deleteActivity(id: string): Promise<ApiActionResult> {
+    return apiRequestStatus({
+      url: `${BASE_URL}/${id}`,
+      method: "DELETE",
+      fallbackMessage: "Error al eliminar la actividad.",
+    });
+  },
 };
 

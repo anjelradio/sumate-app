@@ -185,3 +185,30 @@ export async function closeActivityAction(id: string): Promise<ApiActionResult> 
   return result;
 }
 
+export async function reopenActivityAction(id: string): Promise<ApiActionResult> {
+  const result = await activityRepositoryImpl.reopenActivity(id);
+
+  if (result.ok) {
+    revalidatePath(`/activities/${id}`);
+    revalidatePath("/my-activities");
+    revalidatePath("/explore");
+    updateTag("activities");
+    updateTag(`activity-${id}`);
+  }
+
+  return result;
+}
+
+export async function deleteActivityAction(id: string): Promise<ApiActionResult> {
+  const result = await activityRepositoryImpl.deleteActivity(id);
+
+  if (result.ok) {
+    revalidatePath("/my-activities");
+    revalidatePath("/explore");
+    updateTag("activities");
+    updateTag(`activity-${id}`);
+  }
+
+  return result;
+}
+

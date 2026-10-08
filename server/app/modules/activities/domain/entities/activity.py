@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import StrEnum
 from uuid import UUID, uuid4
 
@@ -8,6 +8,7 @@ from app.modules.activities.domain.exceptions import (
     InvalidActivityImageException,
     InvalidActivityNameException,
 )
+from app.shared.domain.exceptions import ValidationException
 
 
 class ActivityStatus(StrEnum):
@@ -90,6 +91,15 @@ class Activity:
 
     def close(self) -> None:
         self.status = ActivityStatus.CLOSED
+
+    def reopen(self, now: datetime | None = None) -> None:
+        if self.status != ActivityStatus.CLOSED:
+            raise ValidationException("Solo se pueden reabrir actividades cerradas.")
+        current_time = now or datetime.now(timezone.utc)
+        activity_date = self.date if self.date.tzinfo is not None else self.date.replace(tzinfo=timezone.utc)
+        if activity_date <= current_time:
+            raise ValidationException("No se puede reabrir una actividad cuya fecha ya ha transcurrido.")
+        self.status = ActivityStatus.ACTIVE
 
     @staticmethod
     def normalize_name(name: str) -> str:
