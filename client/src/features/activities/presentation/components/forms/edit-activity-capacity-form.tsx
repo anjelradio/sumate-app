@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/features/shared/presentation/components/custom-buttons/submit-button";
 import { appToast } from "@/features/shared/presentation/components/notifications/toast";
 import { useSubmitWithSchema } from "@/features/shared/presentation/hooks/use-submit-with-schema";
-import { updateActivityInfoAction } from "../../actions/activity.action";
+import { updateActivityCapacityAction } from "../../actions/activity.action";
 import { EditCapacitySchema } from "@/features/activities/infrastructure/schemas/activity.schemas";
 
 type EditActivityCapacityFormProps = {
@@ -31,9 +31,7 @@ export function EditActivityCapacityForm({
       schema: EditCapacitySchema,
       payload: { capacity: Number(capacityValue) },
       action: (data) =>
-        updateActivityInfoAction(activityId, {
-          capacity: Number(data.capacity),
-        }),
+        updateActivityCapacityAction(activityId, Number(data.capacity)),
       onSuccess: () => {
         appToast.success("Cupos actualizados.");
         onSuccess();

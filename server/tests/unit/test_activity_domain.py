@@ -48,11 +48,11 @@ def test_base_model_soft_delete_and_restore():
     assert model.deleted_date is None
 
 
-def test_list_activities_query_handler_propagates_creator_image():
+def test_list_explore_activities_query_handler_propagates_creator_image():
     from unittest.mock import MagicMock
-    from app.modules.activities.application.queries.list_activities import (
-        ListActivitiesQuery,
-        ListActivitiesQueryHandler,
+    from app.modules.activities.application.queries.list_explore_activities import (
+        ListExploreActivitiesQuery,
+        ListExploreActivitiesQueryHandler,
     )
 
     activity = Activity.create(
@@ -66,10 +66,10 @@ def test_list_activities_query_handler_propagates_creator_image():
     )
 
     repo = MagicMock()
-    repo.list_activities.return_value = [activity]
+    repo.list_explore.return_value = [activity]
 
-    handler = ListActivitiesQueryHandler(repo)
-    result = handler.execute(ListActivitiesQuery(scope="mine", current_user_id="usr_123"))
+    handler = ListExploreActivitiesQueryHandler(repo)
+    result = handler.execute(ListExploreActivitiesQuery(current_user_id="usr_456"))
 
     assert len(result.items) == 1
     assert result.items[0].creator_name == "Ana Pérez"

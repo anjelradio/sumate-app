@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
 from uuid import UUID
 
 from app.modules.activities.domain.entities.activity import Activity
@@ -15,12 +16,20 @@ class ActivityRepository(ABC):
         ...
 
     @abstractmethod
-    def list_activities(
+    def list_explore(
         self,
         *,
-        owner_id: str | None = None,
-        exclude_owner_id: str | None = None,
+        exclude_owner_id: str,
+        min_date: datetime,
     ) -> list[Activity]:
+        ...
+
+    @abstractmethod
+    def list_my_activities(
+        self,
+        *,
+        owner_id: str,
+    ) -> list[tuple[Activity, int]]:
         ...
 
     @abstractmethod

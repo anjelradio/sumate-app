@@ -32,6 +32,10 @@ export type ActivityListItem = Pick<
   | "creatorImage"
 >;
 
+export type MyActivityListItem = ActivityListItem & {
+  registeredCount: number;
+};
+
 export type ActivityDetail = {
   id: string;
   activityId: string;
@@ -42,8 +46,16 @@ export type ActivityDetail = {
   description: string | null;
 };
 
+export type ActivityParticipant = {
+  id: string;
+  name: string;
+  image: string | null;
+};
+
 export type ActivityDetailData = Activity & {
   isOwner: boolean;
+  isParticipating?: boolean;
+  participants: ActivityParticipant[];
   detail: ActivityDetail | null;
 };
 

@@ -115,17 +115,14 @@ export function ActivityDetailInfo({
     useActivityDetailUiStore();
 
   const { fullDate, time } = formatDetailedDate(date);
+  const enrolledCount = activity.participants?.length ?? 0;
 
-  const locationQuery =
-    detail?.place ||
-    detail?.address ||
-    (detail?.latitude != null && detail?.longitude != null
-      ? `${detail.latitude},${detail.longitude}`
-      : "");
-
-  const googleMapsUrl = locationQuery
-    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationQuery)}`
-    : "#";
+  const googleMapsUrl =
+    detail?.latitude != null && detail?.longitude != null
+      ? `https://www.google.com/maps/search/?api=1&query=${detail.latitude},${detail.longitude}`
+      : detail?.address || detail?.place
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((detail.address || detail.place)!)}`
+        : "#";
 
   const googleCalendarUrl = getGoogleCalendarUrl(
     name,
@@ -263,19 +260,13 @@ export function ActivityDetailInfo({
                   Cupos disponibles
                 </p>
                 <p className="text-xs text-slate-500 font-medium mt-0.5">
-                  {capacity} {capacity === 1 ? "lugar disponible" : "lugares disponibles"}
+                  {enrolledCount} / {capacity} {capacity === 1 ? "cupo reservado" : "cupos reservados"}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
-              {!isEditMode && (
-                <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full">
-                  Limitados
-                </span>
-              )}
-
-              {isOwner && isEditMode && (
+            {isOwner && isEditMode && (
+              <div className="flex items-center space-x-2">
                 <button
                   type="button"
                   onClick={() => setActiveField("capacity")}
@@ -289,8 +280,8 @@ export function ActivityDetailInfo({
                 >
                   <Pencil className="w-4 h-4" />
                 </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -344,7 +335,7 @@ export function ActivityDetailInfo({
               >
                 <Pencil className="w-4 h-4" />
               </button>
-            ) : locationQuery ? (
+            ) : googleMapsUrl !== "#" ? (
               <a
                 href={googleMapsUrl}
                 target="_blank"

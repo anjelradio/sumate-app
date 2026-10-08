@@ -17,7 +17,6 @@ class UpdateActivityInfoCommand:
     owner_id: str
     name: str | None = None
     date: datetime | None = None
-    capacity: int | None = None
 
 
 class UpdateActivityInfoUseCase:
@@ -40,7 +39,6 @@ class UpdateActivityInfoUseCase:
         activity.update_info(
             name=command.name,
             date=command.date,
-            capacity=command.capacity,
         )
         self.activity_repository.save(activity)
         self.uow.commit()

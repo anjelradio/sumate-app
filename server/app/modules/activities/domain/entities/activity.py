@@ -71,14 +71,14 @@ class Activity:
         *,
         name: str | None = None,
         date: datetime | None = None,
-        capacity: int | None = None,
     ) -> None:
         if name is not None:
             self.name = self.normalize_name(name)
         if date is not None:
             self.date = self.validate_date(date)
-        if capacity is not None:
-            self.capacity = self.validate_capacity(capacity)
+
+    def update_capacity(self, capacity: int) -> None:
+        self.capacity = self.validate_capacity(capacity)
 
     def update_image(self, image_url: str) -> None:
         self.image_url = self.validate_image_url(image_url)

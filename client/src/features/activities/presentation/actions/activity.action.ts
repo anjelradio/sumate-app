@@ -117,9 +117,34 @@ export async function updateActivityImageAction(
 
 export async function updateActivityInfoAction(
   id: string,
-  data: { name?: string; date?: string; capacity?: number }
+  data: { name?: string; date?: string }
 ): Promise<ApiActionResult> {
   const result = await activityRepositoryImpl.updateInfo(id, data);
+
+  if (result.ok) {
+    revalidatePath(`/activities/${id}`);
+    revalidatePath("/my-activities");
+    revalidatePath("/explore");
+    updateTag("activities");
+    updateTag(`activity-${id}`);
+  }
+
+  return result;
+}
+
+export async function updateActivityCapacityAction(
+  id: string,
+  capacity: number
+): Promise<ApiActionResult> {
+  if (isNaN(capacity) || !Number.isInteger(capacity) || capacity <= 0) {
+    return errorResult("La cantidad de plazas debe ser un número entero mayor a cero.");
+  }
+
+  if (capacity > 10000) {
+    return errorResult("La cantidad de plazas no puede superar 10,000.");
+  }
+
+  const result = await activityRepositoryImpl.updateCapacity(id, { capacity });
 
   if (result.ok) {
     revalidatePath(`/activities/${id}`);

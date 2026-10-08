@@ -1,4 +1,4 @@
-from typing import Annotated, Literal
+from typing import Annotated
 from uuid import UUID
 
 from app.core.dependencies import CurrentUser, DBSession, UoWDep
@@ -6,9 +6,13 @@ from app.modules.activities.application.queries.get_activity_detail import (
     GetActivityDetailQuery,
     GetActivityDetailQueryHandler,
 )
-from app.modules.activities.application.queries.list_activities import (
-    ListActivitiesQuery,
-    ListActivitiesQueryHandler,
+from app.modules.activities.application.queries.list_explore_activities import (
+    ListExploreActivitiesQuery,
+    ListExploreActivitiesQueryHandler,
+)
+from app.modules.activities.application.queries.list_my_activities import (
+    ListMyActivitiesQuery,
+    ListMyActivitiesQueryHandler,
 )
 from app.modules.activities.application.use_cases.close_activity import (
     CloseActivityCommand,
@@ -21,6 +25,10 @@ from app.modules.activities.application.use_cases.create_activity import (
 from app.modules.activities.application.use_cases.publish_activity import (
     PublishActivityCommand,
     PublishActivityUseCase,
+)
+from app.modules.activities.application.use_cases.update_activity_capacity import (
+    UpdateActivityCapacityCommand,
+    UpdateActivityCapacityUseCase,
 )
 from app.modules.activities.application.use_cases.update_activity_description import (
     UpdateActivityDescriptionCommand,
@@ -44,7 +52,11 @@ from app.modules.activities.infrastructure.api.schemas.activity_schemas import (
     ActivityDetailRead,
     ActivityListItemRead,
     ActivityListRead,
+    ActivityParticipantRead,
     CreateActivityRequest,
+    MyActivityListItemRead,
+    MyActivityListRead,
+    UpdateActivityCapacityRequest,
     UpdateActivityInfoRequest,
     UpdateDescriptionRequest,
     UpdateLocationRequest,
@@ -55,7 +67,10 @@ from app.modules.activities.infrastructure.external.cloudinary_service import (
 from app.modules.activities.infrastructure.persistence.repositories.sqlmodel_activity_repository import (
     SQLModelActivityRepository,
 )
-from fastapi import APIRouter, Depends, File, Query, Response, UploadFile, status
+from app.modules.participations.infrastructure.persistence.repositories.sqlmodel_participation_repository import (
+    SQLModelParticipationRepository,
+)
+from fastapi import APIRouter, Depends, File, Response, UploadFile, status
 
 router = APIRouter(prefix="/activities", tags=["Actividades"])
 
@@ -89,24 +104,18 @@ async def create_activity(
 
 
 @router.get(
-    "",
+    "/explore",
     response_model=ActivityListRead,
-    summary="Listar actividades",
-    description="Retorna la lista de actividades activas según el scope indicado ('mine' por defecto o 'others').",
+    summary="Listar actividades para explorar",
 )
-def list_activities(
+def list_explore_activities(
     current_user: CurrentUser,
     db: DBSession,
-    scope: Annotated[
-        Literal["mine", "others"],
-        Query(description="Ámbito de búsqueda: 'mine' para actividades propias, 'others' para terceros"),
-    ] = "mine",
 ) -> ActivityListRead:
     repository = SQLModelActivityRepository(db)
-    handler = ListActivitiesQueryHandler(repository)
+    handler = ListExploreActivitiesQueryHandler(repository)
     dto = handler.execute(
-        ListActivitiesQuery(
-            scope=scope,
+        ListExploreActivitiesQuery(
             current_user_id=current_user.user_id,
         )
     )
@@ -130,6 +139,42 @@ def list_activities(
 
 
 @router.get(
+    "/my-activities",
+    response_model=MyActivityListRead,
+    summary="Listar mis actividades",
+)
+def list_my_activities(
+    current_user: CurrentUser,
+    db: DBSession,
+) -> MyActivityListRead:
+    repository = SQLModelActivityRepository(db)
+    handler = ListMyActivitiesQueryHandler(repository)
+    dto = handler.execute(
+        ListMyActivitiesQuery(
+            current_user_id=current_user.user_id,
+        )
+    )
+
+    return MyActivityListRead(
+        items=[
+            MyActivityListItemRead(
+                id=item.id,
+                name=item.name,
+                image_url=item.image_url,
+                date=item.date,
+                owner_id=item.owner_id,
+                capacity=item.capacity,
+                status=item.status,
+                registered_count=item.registered_count,
+                creator_name=item.creator_name,
+                creator_image=item.creator_image,
+            )
+            for item in dto.items
+        ]
+    )
+
+
+@router.get(
     "/{activity_id}",
     response_model=ActivityDetailRead,
     summary="Obtener detalle de una actividad",
@@ -141,7 +186,8 @@ def get_activity_detail(
     db: DBSession,
 ) -> ActivityDetailRead:
     repository = SQLModelActivityRepository(db)
-    handler = GetActivityDetailQueryHandler(repository)
+    participation_repo = SQLModelParticipationRepository(db)
+    handler = GetActivityDetailQueryHandler(repository, participation_repo)
     dto = handler.execute(
         GetActivityDetailQuery(
             activity_id=activity_id,
@@ -163,6 +209,15 @@ def get_activity_detail(
         else None
     )
 
+    participants_data = [
+        ActivityParticipantRead(
+            id=p.id,
+            name=p.name,
+            image=p.image,
+        )
+        for p in dto.participants
+    ]
+
     return ActivityDetailRead(
         id=dto.id,
         name=dto.name,
@@ -173,7 +228,9 @@ def get_activity_detail(
         date=dto.date,
         capacity=dto.capacity,
         status=dto.status,
-        is_owner=(dto.owner_id == current_user.user_id),
+        is_owner=dto.is_owner,
+        is_participating=dto.is_participating,
+        participants=participants_data,
         detail=detail_data,
     )
 
@@ -254,7 +311,7 @@ async def update_activity_image(
 @router.patch(
     "/{activity_id}/info",
     status_code=status.HTTP_200_OK,
-    summary="Actualizar datos base (título, fecha, cupos)",
+    summary="Actualizar datos base (título, fecha)",
 )
 def update_activity_info(
     activity_id: UUID,
@@ -270,6 +327,33 @@ def update_activity_info(
             owner_id=current_user.user_id,
             name=payload.name,
             date=payload.date,
+        )
+    )
+    return Response(status_code=status.HTTP_200_OK)
+
+
+@router.patch(
+    "/{activity_id}/capacity",
+    status_code=status.HTTP_200_OK,
+    summary="Actualizar cupos de la actividad",
+)
+def update_activity_capacity(
+    activity_id: UUID,
+    payload: UpdateActivityCapacityRequest,
+    current_user: CurrentUser,
+    uow: UoWDep,
+) -> Response:
+    activity_repo = SQLModelActivityRepository(uow.session)
+    participation_repo = SQLModelParticipationRepository(uow.session)
+    use_case = UpdateActivityCapacityUseCase(
+        activity_repository=activity_repo,
+        participation_repository=participation_repo,
+        uow=uow,
+    )
+    use_case.execute(
+        UpdateActivityCapacityCommand(
+            activity_id=activity_id,
+            owner_id=current_user.user_id,
             capacity=payload.capacity,
         )
     )

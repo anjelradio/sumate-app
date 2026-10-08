@@ -22,6 +22,14 @@ export const ActivityListResponseSchema = z.object({
   items: z.array(ActivityListItemResponseSchema),
 });
 
+export const MyActivityListItemResponseSchema = ActivityListItemResponseSchema.extend({
+  registered_count: z.number().int().nonnegative(),
+});
+
+export const MyActivityListResponseSchema = z.object({
+  items: z.array(MyActivityListItemResponseSchema),
+});
+
 export const ActivityDetailResponseSchema = z.object({
   id: z.string(),
   activity_id: z.string(),
@@ -30,6 +38,12 @@ export const ActivityDetailResponseSchema = z.object({
   place: z.string().nullable().optional(),
   address: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+});
+
+export const ActivityParticipantResponseSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  image: z.string().nullable().optional(),
 });
 
 export const ActivityDetailDataResponseSchema = z.object({
@@ -43,11 +57,16 @@ export const ActivityDetailDataResponseSchema = z.object({
   creator_name: z.string().nullable().optional(),
   creator_image: z.string().nullable().optional(),
   is_owner: z.boolean(),
+  is_participating: z.boolean().optional().default(false),
+  participants: z.array(ActivityParticipantResponseSchema).optional().default([]),
   detail: ActivityDetailResponseSchema.nullable().optional(),
 });
 
+export type ActivityParticipantResponse = z.infer<typeof ActivityParticipantResponseSchema>;
 export type ActivityListItemResponse = z.infer<typeof ActivityListItemResponseSchema>;
 export type ActivityListResponse = z.infer<typeof ActivityListResponseSchema>;
+export type MyActivityListItemResponse = z.infer<typeof MyActivityListItemResponseSchema>;
+export type MyActivityListResponse = z.infer<typeof MyActivityListResponseSchema>;
 export type ActivityDetailResponse = z.infer<typeof ActivityDetailResponseSchema>;
 export type ActivityDetailDataResponse = z.infer<typeof ActivityDetailDataResponseSchema>;
 
@@ -63,7 +82,6 @@ export const UpdateDescriptionSchema = z.object({
 export const UpdateActivityInfoSchema = z.object({
   name: z.string().min(3).max(120).optional(),
   date: z.string().min(1).optional(),
-  capacity: z.number().int().positive().max(10000).optional(),
 });
 
 /**

@@ -16,29 +16,38 @@ import {
 import type {
   ActivityDetailData,
   ActivityListItem,
-  ActivityScope,
+  MyActivityListItem,
 } from "../../domain/entities/activity.entity";
 import type { ActivityRepository } from "../../domain/repositories/activity.repository";
 import { activityMapper } from "../mappers/activity.mapper";
 import {
   ActivityDetailDataResponseSchema,
   ActivityListResponseSchema,
+  MyActivityListResponseSchema,
 } from "../schemas/activity.schemas";
 
 const BASE_URL = `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000/api"}/activities`;
 
 export const activityRepositoryImpl: ActivityRepository = {
-  async listActivities(scope: ActivityScope): Promise<ApiResult<ActivityListItem[]>> {
-    const url = new URL(BASE_URL);
-    url.searchParams.set("scope", scope);
-
+  async listExplore(): Promise<ApiResult<ActivityListItem[]>> {
     return apiRequestData({
-      url: url.toString(),
+      url: `${BASE_URL}/explore`,
       method: "GET",
-      next: { revalidate: 30, tags: ["activities", `activities-${scope}`] },
+      next: { revalidate: 30, tags: ["activities", "activities-explore"] },
       responseSchema: ActivityListResponseSchema,
       mapData: activityMapper.toActivityList,
-      fallbackMessage: "Error al cargar la lista de actividades.",
+      fallbackMessage: "Error al cargar las actividades para explorar.",
+    });
+  },
+
+  async listMyActivities(): Promise<ApiResult<MyActivityListItem[]>> {
+    return apiRequestData({
+      url: `${BASE_URL}/my-activities`,
+      method: "GET",
+      next: { revalidate: 30, tags: ["activities", "activities-mine"] },
+      responseSchema: MyActivityListResponseSchema,
+      mapData: activityMapper.toMyActivityList,
+      fallbackMessage: "Error al cargar mis actividades.",
     });
   },
 
@@ -97,13 +106,25 @@ export const activityRepositoryImpl: ActivityRepository = {
 
   async updateInfo(
     id: string,
-    data: { name?: string; date?: string; capacity?: number }
+    data: { name?: string; date?: string }
   ): Promise<ApiActionResult> {
     return apiRequestStatus({
       url: `${BASE_URL}/${id}/info`,
       method: "PATCH",
       body: data,
       fallbackMessage: "Error al actualizar los datos base de la actividad.",
+    });
+  },
+
+  async updateCapacity(
+    id: string,
+    data: { capacity: number }
+  ): Promise<ApiActionResult> {
+    return apiRequestStatus({
+      url: `${BASE_URL}/${id}/capacity`,
+      method: "PATCH",
+      body: data,
+      fallbackMessage: "Error al actualizar los cupos de la actividad.",
     });
   },
 

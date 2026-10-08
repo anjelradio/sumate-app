@@ -2,12 +2,16 @@
 
 import { useMemo, useState } from "react";
 import { CalendarX } from "lucide-react";
-import type { ActivityListItem, ActivityScope } from "@/features/activities/domain/entities/activity.entity";
+import type {
+  ActivityListItem,
+  ActivityScope,
+  MyActivityListItem,
+} from "@/features/activities/domain/entities/activity.entity";
 import { ActivityCard } from "./activity-card";
 import { ActivitiesFilterBar, type FilterOption } from "./activities-filter-bar";
 
 type ActivitiesFeedProps = {
-  activities: ActivityListItem[];
+  activities: (ActivityListItem | MyActivityListItem)[];
   scope?: ActivityScope;
   emptyTitle?: string;
   emptyMessage?: string;

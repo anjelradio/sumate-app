@@ -54,6 +54,23 @@ class ActivityListRead(SQLModel):
     items: list[ActivityListItemRead]
 
 
+class MyActivityListItemRead(SQLModel):
+    id: UUID
+    name: str
+    image_url: str
+    date: datetime
+    owner_id: str
+    capacity: int
+    status: str
+    registered_count: int
+    creator_name: str | None = None
+    creator_image: str | None = None
+
+
+class MyActivityListRead(SQLModel):
+    items: list[MyActivityListItemRead]
+
+
 class ActivityDetailDataRead(SQLModel):
     id: UUID
     activity_id: UUID
@@ -62,6 +79,12 @@ class ActivityDetailDataRead(SQLModel):
     place: str | None = None
     address: str | None = None
     description: str | None = None
+
+
+class ActivityParticipantRead(SQLModel):
+    id: str
+    name: str
+    image: str | None = None
 
 
 class ActivityDetailRead(SQLModel):
@@ -75,6 +98,8 @@ class ActivityDetailRead(SQLModel):
     capacity: int
     status: str
     is_owner: bool
+    is_participating: bool = False
+    participants: list[ActivityParticipantRead] = []
     detail: ActivityDetailDataRead | None = None
 
 
@@ -91,5 +116,8 @@ class UpdateDescriptionRequest(SQLModel):
 class UpdateActivityInfoRequest(SQLModel):
     name: str | None = None
     date: datetime | None = None
-    capacity: int | None = None
+
+
+class UpdateActivityCapacityRequest(SQLModel):
+    capacity: int
 

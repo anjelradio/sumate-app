@@ -12,14 +12,19 @@ import type {
 import type {
   ActivityDetailData,
   ActivityListItem,
-  ActivityScope,
+  MyActivityListItem,
 } from "../entities/activity.entity";
 
 export interface ActivityRepository {
   /**
-   * Obtiene la lista de actividades según el ámbito indicado (propias o de terceros).
+   * Obtiene la lista de actividades para explorar (futuras y de terceros).
    */
-  listActivities(scope: ActivityScope): Promise<ApiResult<ActivityListItem[]>>;
+  listExplore(): Promise<ApiResult<ActivityListItem[]>>;
+
+  /**
+   * Obtiene la lista de actividades creadas por el usuario con conteo de inscritos.
+   */
+  listMyActivities(): Promise<ApiResult<MyActivityListItem[]>>;
 
   /**
    * Obtiene el detalle completo de una actividad por su ID.
@@ -53,11 +58,19 @@ export interface ActivityRepository {
   updateImage(id: string, formData: FormData): Promise<ApiActionResult>;
 
   /**
-   * Actualiza los datos base (título, fecha y cupos) de la actividad.
+   * Actualiza los datos base (título y fecha) de la actividad.
    */
   updateInfo(
     id: string,
-    data: { name?: string; date?: string; capacity?: number }
+    data: { name?: string; date?: string }
+  ): Promise<ApiActionResult>;
+
+  /**
+   * Actualiza la capacidad de plazas de la actividad.
+   */
+  updateCapacity(
+    id: string,
+    data: { capacity: number }
   ): Promise<ApiActionResult>;
 
   /**

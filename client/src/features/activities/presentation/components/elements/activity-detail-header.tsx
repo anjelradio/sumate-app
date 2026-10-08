@@ -50,7 +50,7 @@ export function ActivityDetailHeader({
 
   return (
     <header
-      className="sticky top-0 z-40 flex items-center justify-between py-3 mb-4 backdrop-blur-md bg-white/95 transition-colors"
+      className="sticky top-0 z-40 flex items-center justify-between -mx-5 px-5 -mt-2 sm:-mt-4 pt-3 sm:pt-4 pb-3 mb-4 bg-white transition-colors"
       data-purpose="top-navigation-bar"
     >
       {/* Botón Volver Atrás */}

@@ -10,6 +10,7 @@ import { ActivityDetailHeader } from "../elements/activity-detail-header";
 import { ActivityDetailHero } from "../elements/activity-detail-hero";
 import { ActivityDetailInfo } from "../elements/activity-detail-info";
 import { ActivityDetailOrganizer } from "../elements/activity-detail-organizer";
+import { ActivityDetailParticipants } from "../elements/activity-detail-participants";
 
 type ActivityDetailViewProps = {
   activity: ActivityDetailData;
@@ -42,6 +43,9 @@ export function ActivityDetailView({ activity }: ActivityDetailViewProps) {
 
         {/* Sección del organizador */}
         <ActivityDetailOrganizer activity={activity} />
+
+        {/* Participantes confirmados */}
+        <ActivityDetailParticipants activity={activity} />
       </main>
 
       {/* Botón flotante de acción (Asistiré / Publicar / Cerrar convocatoria) */}

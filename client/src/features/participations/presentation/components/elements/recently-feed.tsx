@@ -1,0 +1,117 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { Clock, Users } from "lucide-react";
+import { ActivityCardShell } from "@/features/activities/presentation/components/elements/activity-card-shell";
+import {
+  ActivitiesFilterBar,
+  type FilterOption,
+} from "@/features/activities/presentation/components/elements/activities-filter-bar";
+import type {
+  ParticipatedActivityListItem,
+  ParticipationFilter,
+} from "@/features/participations/domain/entities/participation.entity";
+
+type RecentlyFeedProps = {
+  participations: ParticipatedActivityListItem[];
+};
+
+const FILTER_OPTIONS: FilterOption<ParticipationFilter>[] = [
+  { id: "all", label: "Todas" },
+  { id: "upcoming", label: "Próximas" },
+  { id: "past", label: "Realizadas" },
+];
+
+export function RecentlyFeed({ participations }: RecentlyFeedProps) {
+  const [activeFilter, setActiveFilter] = useState<ParticipationFilter>("all");
+
+  const filteredParticipations = useMemo(() => {
+    if (activeFilter === "upcoming") {
+      return participations.filter((item) => !item.isPast);
+    }
+    if (activeFilter === "past") {
+      return participations.filter((item) => item.isPast);
+    }
+    return participations;
+  }, [participations, activeFilter]);
+
+  const getEmptyState = () => {
+    switch (activeFilter) {
+      case "upcoming":
+        return {
+          title: "Sin actividades próximas",
+          message: "No tienes actividades programadas próximamente.",
+        };
+      case "past":
+        return {
+          title: "Sin actividades realizadas",
+          message: "Aún no cuentas con actividades completadas en tu historial.",
+        };
+      default:
+        return {
+          title: "Sin participaciones",
+          message: "Aún no te has sumado a ninguna actividad. ¡Explora y participa!",
+        };
+    }
+  };
+
+  const emptyState = getEmptyState();
+
+  return (
+    <div className="flex-1 flex flex-col min-h-0 h-full" data-purpose="recently-feed-wrapper">
+      <ActivitiesFilterBar<ParticipationFilter>
+        options={FILTER_OPTIONS}
+        activeId={activeFilter}
+        onChange={setActiveFilter}
+      />
+
+      <div className="flex-1 overflow-y-auto no-scrollbar pt-3 pb-24" data-purpose="recently-feed-scroll">
+        {filteredParticipations.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+            <div className="w-16 h-16 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center mb-3">
+              <Clock className="w-8 h-8" />
+            </div>
+            <h3 className="text-lg font-bold text-zinc-800">{emptyState.title}</h3>
+            <p className="text-sm text-zinc-500 mt-1 max-w-xs leading-relaxed">
+              {emptyState.message}
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col">
+            {filteredParticipations.map((item, index) => (
+              <ActivityCardShell
+                key={item.id}
+                activity={item}
+                priority={index < 2}
+                badge={
+                  item.isPast ? (
+                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-700/80 text-white backdrop-blur-xs shadow-sm">
+                      Realizada
+                    </span>
+                  ) : (
+                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/90 text-white backdrop-blur-xs shadow-sm">
+                      Próxima
+                    </span>
+                  )
+                }
+              >
+                {item.creatorName && (
+                  <p className="mt-1 text-xs text-slate-500">
+                    Por <span className="font-semibold text-slate-700">{item.creatorName}</span>
+                  </p>
+                )}
+
+                <div className="mt-1 flex items-center justify-between text-xs text-slate-500">
+                  <div className="flex items-center gap-1.5 font-medium text-slate-600">
+                    <Users className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span>{item.capacity} cupos totales</span>
+                  </div>
+                </div>
+              </ActivityCardShell>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

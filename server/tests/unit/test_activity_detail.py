@@ -3,6 +3,10 @@ from unittest.mock import MagicMock
 from uuid import uuid4
 import pytest
 
+from app.modules.activities.application.queries.get_activity_detail import (
+    GetActivityDetailQuery,
+    GetActivityDetailQueryHandler,
+)
 from app.modules.activities.application.use_cases.close_activity import (
     CloseActivityCommand,
     CloseActivityUseCase,
@@ -13,6 +17,7 @@ from app.modules.activities.application.use_cases.publish_activity import (
 )
 from app.modules.activities.domain.entities.activity import Activity, ActivityStatus
 from app.modules.activities.domain.entities.activity_detail import ActivityDetail
+from app.modules.participations.domain.entities.participation import Participation
 from app.shared.domain.exceptions import ForbiddenException, ValidationException
 
 
@@ -178,3 +183,51 @@ def test_close_activity_only_owner():
     assert result.status == ActivityStatus.CLOSED
     repo.save.assert_called_once_with(activity)
     uow.commit.assert_called_once()
+
+
+def test_get_activity_detail_with_participants():
+    activity_id = uuid4()
+    activity = Activity(
+        id=activity_id,
+        name="Taller de Reciclaje",
+        owner_id="owner_1",
+        image_url="https://res.cloudinary.com/test.webp",
+        date=datetime.now(timezone.utc) + timedelta(days=2),
+        capacity=10,
+        status=ActivityStatus.ACTIVE,
+    )
+    detail = ActivityDetail.create(
+        activity_id=activity_id,
+        latitude=-17.38,
+        longitude=-66.15,
+        place="Parque",
+        address="Calle 1",
+        description="Detalle",
+    )
+    act_repo = MagicMock()
+    act_repo.get_detail_by_activity_id.return_value = (activity, detail)
+
+    part_repo = MagicMock()
+    part_repo.is_participating.return_value = True
+    participation = Participation.create(activity_id=activity_id, user_id="user_2")
+    part_repo.list_participants_by_activity_id.return_value = [
+        (participation, "Ana Lopez", "https://avatar.com/ana.png")
+    ]
+
+    handler = GetActivityDetailQueryHandler(act_repo, part_repo)
+    result = handler.execute(
+        GetActivityDetailQuery(activity_id=activity_id, current_user_id="user_2")
+    )
+
+    assert result.id == activity_id
+    assert result.is_owner is False
+    assert result.is_participating is True
+    assert len(result.participants) == 1
+    assert result.participants[0].id == "user_2"
+    assert result.participants[0].name == "Ana Lopez"
+    assert result.participants[0].image == "https://avatar.com/ana.png"
+
+    owner_result = handler.execute(
+        GetActivityDetailQuery(activity_id=activity_id, current_user_id="owner_1")
+    )
+    assert owner_result.is_owner is True

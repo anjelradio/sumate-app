@@ -3,15 +3,25 @@ import { cache } from "react";
 import type {
   ActivityDetailData,
   ActivityListItem,
-  ActivityScope,
+  MyActivityListItem,
 } from "../../domain/entities/activity.entity";
 import { activityRepositoryImpl } from "../../infrastructure/repositories/activity.repository";
 
-export const getActivitiesQuery = cache(async (scope: ActivityScope): Promise<ActivityListItem[]> => {
-  const response = await activityRepositoryImpl.listActivities(scope);
+export const getExploreActivitiesQuery = cache(async (): Promise<ActivityListItem[]> => {
+  const response = await activityRepositoryImpl.listExplore();
 
   if (!response.ok) {
-    throw new Error(response.errors?.[0] ?? "Error al cargar las actividades.");
+    throw new Error(response.errors?.[0] ?? "Error al cargar las actividades para explorar.");
+  }
+
+  return response.data;
+});
+
+export const getMyActivitiesQuery = cache(async (): Promise<MyActivityListItem[]> => {
+  const response = await activityRepositoryImpl.listMyActivities();
+
+  if (!response.ok) {
+    throw new Error(response.errors?.[0] ?? "Error al cargar mis actividades.");
   }
 
   return response.data;

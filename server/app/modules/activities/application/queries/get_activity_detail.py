@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from uuid import UUID
 
@@ -6,6 +6,16 @@ from app.modules.activities.domain.exceptions import ActivityNotFoundException
 from app.modules.activities.domain.repositories.activity_repository import (
     ActivityRepository,
 )
+from app.modules.participations.domain.repositories.participation_repository import (
+    ParticipationRepository,
+)
+
+
+@dataclass(frozen=True, slots=True)
+class ActivityParticipantDetailDTO:
+    id: str
+    name: str
+    image: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,14 +44,22 @@ class ActivityDetailDTO:
     date: datetime
     capacity: int
     status: str
+    is_owner: bool = False
     creator_name: str | None = None
     creator_image: str | None = None
+    is_participating: bool = False
+    participants: list[ActivityParticipantDetailDTO] = field(default_factory=list)
     detail: ActivityDetailDataDTO | None = None
 
 
 class GetActivityDetailQueryHandler:
-    def __init__(self, activity_repository: ActivityRepository) -> None:
+    def __init__(
+        self,
+        activity_repository: ActivityRepository,
+        participation_repository: ParticipationRepository | None = None,
+    ) -> None:
         self.activity_repository = activity_repository
+        self.participation_repository = participation_repository
 
     def execute(self, query: GetActivityDetailQuery) -> ActivityDetailDTO:
         result = self.activity_repository.get_detail_by_activity_id(query.activity_id)
@@ -58,6 +76,28 @@ class GetActivityDetailQueryHandler:
         if activity_status == "draft" and activity.owner_id != query.current_user_id:
             raise ActivityNotFoundException()
 
+        is_participating = False
+        if self.participation_repository and query.current_user_id:
+            is_participating = self.participation_repository.is_participating(
+                query.activity_id, query.current_user_id
+            )
+
+        participants: list[ActivityParticipantDetailDTO] = []
+        if self.participation_repository:
+            raw_participants = (
+                self.participation_repository.list_participants_by_activity_id(
+                    query.activity_id
+                )
+            )
+            participants = [
+                ActivityParticipantDetailDTO(
+                    id=part.user_id,
+                    name=user_name,
+                    image=user_image,
+                )
+                for part, user_name, user_image in raw_participants
+            ]
+
         detail_dto = (
             ActivityDetailDataDTO(
                 id=detail.id,
@@ -72,6 +112,8 @@ class GetActivityDetailQueryHandler:
             else None
         )
 
+        is_owner = bool(query.current_user_id and activity.owner_id == query.current_user_id)
+
         return ActivityDetailDTO(
             id=activity.id,
             name=activity.name,
@@ -80,7 +122,10 @@ class GetActivityDetailQueryHandler:
             date=activity.date,
             capacity=activity.capacity,
             status=activity_status,
+            is_owner=is_owner,
             creator_name=activity.creator_name,
             creator_image=activity.creator_image,
+            is_participating=is_participating,
+            participants=participants,
             detail=detail_dto,
         )

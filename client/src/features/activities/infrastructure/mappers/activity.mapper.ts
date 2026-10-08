@@ -5,12 +5,19 @@
  * y las entidades camelCase del frontend.
  */
 
-import type { ActivityDetail, ActivityDetailData, ActivityListItem } from "../../domain/entities/activity.entity";
+import type {
+  ActivityDetail,
+  ActivityDetailData,
+  ActivityListItem,
+  MyActivityListItem,
+} from "../../domain/entities/activity.entity";
 import type {
   ActivityDetailDataResponse,
   ActivityDetailResponse,
   ActivityListItemResponse,
   ActivityListResponse,
+  MyActivityListItemResponse,
+  MyActivityListResponse,
 } from "../schemas/activity.schemas";
 
 export const activityMapper = {
@@ -28,8 +35,19 @@ export const activityMapper = {
     };
   },
 
+  toMyActivityListItem(dto: MyActivityListItemResponse): MyActivityListItem {
+    return {
+      ...activityMapper.toActivityListItem(dto),
+      registeredCount: dto.registered_count,
+    };
+  },
+
   toActivityList(dto: ActivityListResponse): ActivityListItem[] {
     return dto.items.map(activityMapper.toActivityListItem);
+  },
+
+  toMyActivityList(dto: MyActivityListResponse): MyActivityListItem[] {
+    return dto.items.map(activityMapper.toMyActivityListItem);
   },
 
   toActivityDetail(dto: ActivityDetailResponse | null | undefined): ActivityDetail | null {
@@ -57,6 +75,12 @@ export const activityMapper = {
       creatorName: dto.creator_name ?? undefined,
       creatorImage: dto.creator_image ?? undefined,
       isOwner: dto.is_owner,
+      isParticipating: dto.is_participating ?? false,
+      participants: (dto.participants ?? []).map((p) => ({
+        id: p.id,
+        name: p.name,
+        image: p.image ?? null,
+      })),
       detail: activityMapper.toActivityDetail(dto.detail),
     };
   },

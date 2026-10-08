@@ -119,5 +119,9 @@ def health_check():
 # REGISTRO DE ROUTERS
 # ==============================================================================
 from app.modules.activities.infrastructure.api.routers.activity_router import router as activity_router
+from app.modules.participations.infrastructure.api.routers.participation_router import (
+    router as participation_router,
+)
 
 app.include_router(activity_router, prefix="/api")
+app.include_router(participation_router, prefix="/api")

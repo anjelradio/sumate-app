@@ -30,3 +30,13 @@ class InvalidActivityCapacityException(ValidationException, ValueError):
     code = "INVALID_CAPACITY"
     message = "La cantidad de plazas debe ser mayor a cero y no superar 10,000."
 
+
+class CapacityLessThanRegisteredException(ValidationException):
+    code = "CAPACITY_LESS_THAN_REGISTERED"
+
+    def __init__(self, registered_count: int) -> None:
+        super().__init__(
+            message=f"No es posible reducir los cupos a un número menor a los participantes ya inscritos ({registered_count}).",
+            code="CAPACITY_LESS_THAN_REGISTERED",
+        )
+

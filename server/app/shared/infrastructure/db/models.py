@@ -19,3 +19,4 @@
 
 from app.modules.activities.infrastructure.persistence.models.activity_model import ActivityModel
 from app.modules.activities.infrastructure.persistence.models.activity_detail_model import ActivityDetailModel
+from app.modules.participations.infrastructure.persistence.models.participation_model import ParticipationModel

@@ -18,7 +18,11 @@ from app.modules.activities.infrastructure.persistence.models.activity_detail_mo
 from app.modules.activities.infrastructure.persistence.models.activity_model import (
     ActivityModel,
 )
+from app.modules.participations.infrastructure.persistence.models.participation_model import (
+    ParticipationModel,
+)
 from app.shared.infrastructure.db.better_auth import BetterAuthUser
+from sqlalchemy import func
 from sqlmodel import Session, select
 
 
@@ -49,11 +53,11 @@ class SQLModelActivityRepository(ActivityRepository):
             creator_image=creator_image,
         )
 
-    def list_activities(
+    def list_explore(
         self,
         *,
-        owner_id: str | None = None,
-        exclude_owner_id: str | None = None,
+        exclude_owner_id: str,
+        min_date: datetime,
     ) -> list[Activity]:
         statement = (
             select(
@@ -62,21 +66,14 @@ class SQLModelActivityRepository(ActivityRepository):
                 BetterAuthUser.image.label("creator_image"),
             )
             .outerjoin(BetterAuthUser, ActivityModel.owner_id == BetterAuthUser.id)
-            .where(ActivityModel.deleted_date.is_(None))
-        )
-
-        if owner_id:
-            statement = statement.where(ActivityModel.owner_id == owner_id)
-            # Para mis actividades: orden descendente por fecha de registro
-            statement = statement.order_by(ActivityModel.created_date.desc())
-        elif exclude_owner_id:
-            statement = statement.where(
+            .where(
+                ActivityModel.deleted_date.is_(None),
                 ActivityModel.owner_id != exclude_owner_id,
                 ActivityModel.status == "active",
+                ActivityModel.date >= min_date,
             )
-            # Para explorar: orden cronológico ascendente por fecha de realización
-            statement = statement.order_by(ActivityModel.date.asc())
-
+            .order_by(ActivityModel.date.asc())
+        )
         results = self.db.exec(statement).all()
         return [
             ActivityMapper.to_domain(
@@ -85,6 +82,48 @@ class SQLModelActivityRepository(ActivityRepository):
                 creator_image=creator_image,
             )
             for record, creator_name, creator_image in results
+        ]
+
+    def list_my_activities(
+        self,
+        *,
+        owner_id: str,
+    ) -> list[tuple[Activity, int]]:
+        subquery = (
+            select(
+                ParticipationModel.activity_id,
+                func.count(ParticipationModel.id).label("registered_count"),
+            )
+            .where(ParticipationModel.deleted_date.is_(None))
+            .group_by(ParticipationModel.activity_id)
+            .subquery()
+        )
+        statement = (
+            select(
+                ActivityModel,
+                BetterAuthUser.name.label("creator_name"),
+                BetterAuthUser.image.label("creator_image"),
+                func.coalesce(subquery.c.registered_count, 0).label("registered_count"),
+            )
+            .outerjoin(BetterAuthUser, ActivityModel.owner_id == BetterAuthUser.id)
+            .outerjoin(subquery, ActivityModel.id == subquery.c.activity_id)
+            .where(
+                ActivityModel.owner_id == owner_id,
+                ActivityModel.deleted_date.is_(None),
+            )
+            .order_by(ActivityModel.created_date.desc())
+        )
+        results = self.db.exec(statement).all()
+        return [
+            (
+                ActivityMapper.to_domain(
+                    record,
+                    creator_name=creator_name,
+                    creator_image=creator_image,
+                ),
+                int(reg_count),
+            )
+            for record, creator_name, creator_image, reg_count in results
         ]
 
     def save(self, activity: Activity) -> None:
