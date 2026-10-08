@@ -11,6 +11,11 @@ class CannotJoinOwnActivityException(ValidationException):
     message = "El organizador no puede inscribirse en su propia actividad."
 
 
+class CannotJoinInactiveActivityException(ValidationException):
+    code = "CANNOT_JOIN_INACTIVE_ACTIVITY"
+    message = "No es posible unirse a una actividad que no se encuentra activa."
+
+
 class ActivityCapacityExceededException(ConflictException):
     code = "ACTIVITY_CAPACITY_EXCEEDED"
     message = "La actividad ha alcanzado su capacidad máxima de participantes."

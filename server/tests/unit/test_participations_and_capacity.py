@@ -32,6 +32,7 @@ from app.modules.participations.domain.entities.participation import Participati
 from app.modules.participations.domain.exceptions import (
     ActivityCapacityExceededException,
     AlreadyParticipatingException,
+    CannotJoinInactiveActivityException,
     CannotJoinOwnActivityException,
     CannotJoinPastActivityException,
     CannotLeavePastActivityException,
@@ -98,6 +99,72 @@ def test_join_activity_owner_cannot_join():
     with pytest.raises(CannotJoinOwnActivityException):
         use_case.execute(
             JoinActivityCommand(activity_id=activity_id, user_id=owner_id)
+        )
+
+
+def test_join_activity_not_found_fails():
+    activity_id = uuid4()
+    act_repo = MagicMock()
+    act_repo.get_by_id.return_value = None
+    part_repo = MagicMock()
+    uow = MagicMock()
+
+    use_case = JoinActivityUseCase(act_repo, part_repo, uow)
+    with pytest.raises(ActivityNotFoundException):
+        use_case.execute(
+            JoinActivityCommand(activity_id=activity_id, user_id="volunteer_1")
+        )
+
+
+def test_join_activity_closed_status_fails():
+    activity_id = uuid4()
+    future_date = datetime.now(timezone.utc) + timedelta(days=2)
+
+    activity = Activity(
+        id=activity_id,
+        name="Taller Comunitario",
+        owner_id="owner_1",
+        image_url="https://res.cloudinary.com/test.webp",
+        date=future_date,
+        capacity=10,
+        status=ActivityStatus.CLOSED,
+    )
+
+    act_repo = MagicMock()
+    act_repo.get_by_id.return_value = activity
+    part_repo = MagicMock()
+    uow = MagicMock()
+
+    use_case = JoinActivityUseCase(act_repo, part_repo, uow)
+    with pytest.raises(CannotJoinInactiveActivityException):
+        use_case.execute(
+            JoinActivityCommand(activity_id=activity_id, user_id="volunteer_1")
+        )
+
+
+def test_join_activity_draft_status_fails():
+    activity_id = uuid4()
+    future_date = datetime.now(timezone.utc) + timedelta(days=2)
+
+    activity = Activity(
+        id=activity_id,
+        name="Taller Comunitario",
+        owner_id="owner_1",
+        image_url="https://res.cloudinary.com/test.webp",
+        date=future_date,
+        capacity=10,
+        status=ActivityStatus.DRAFT,
+    )
+
+    act_repo = MagicMock()
+    act_repo.get_by_id.return_value = activity
+    part_repo = MagicMock()
+    uow = MagicMock()
+
+    use_case = JoinActivityUseCase(act_repo, part_repo, uow)
+    with pytest.raises(CannotJoinInactiveActivityException):
+        use_case.execute(
+            JoinActivityCommand(activity_id=activity_id, user_id="volunteer_1")
         )
 
 

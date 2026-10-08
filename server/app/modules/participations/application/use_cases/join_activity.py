@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from uuid import UUID
 
+from app.modules.activities.domain.entities.activity import ActivityStatus
 from app.modules.activities.domain.exceptions import ActivityNotFoundException
 from app.modules.activities.domain.repositories.activity_repository import (
     ActivityRepository,
@@ -10,6 +11,7 @@ from app.modules.participations.domain.entities.participation import Participati
 from app.modules.participations.domain.exceptions import (
     ActivityCapacityExceededException,
     AlreadyParticipatingException,
+    CannotJoinInactiveActivityException,
     CannotJoinOwnActivityException,
     CannotJoinPastActivityException,
 )
@@ -43,6 +45,9 @@ class JoinActivityUseCase:
 
         if activity.owner_id == command.user_id:
             raise CannotJoinOwnActivityException()
+
+        if activity.status != ActivityStatus.ACTIVE:
+            raise CannotJoinInactiveActivityException()
 
         now = datetime.now(timezone.utc)
         act_date = (
