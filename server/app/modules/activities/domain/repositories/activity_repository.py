@@ -12,7 +12,9 @@ class ActivityRepository(ABC):
         ...
 
     @abstractmethod
-    def get_by_id(self, activity_id: UUID) -> Activity | None:
+    def get_by_id(
+        self, activity_id: UUID, for_update: bool = False
+    ) -> Activity | None:
         ...
 
     @abstractmethod

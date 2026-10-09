@@ -35,7 +35,9 @@ class UpdateActivityCapacityUseCase:
         self.uow = uow
 
     def execute(self, command: UpdateActivityCapacityCommand) -> Activity:
-        activity = self.activity_repository.get_by_id(command.activity_id)
+        activity = self.activity_repository.get_by_id(
+            command.activity_id, for_update=True
+        )
         if not activity:
             raise ActivityNotFoundException()
 

@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock
 from uuid import uuid4
-import pytest
 
+import pytest
 from app.modules.activities.application.queries.list_explore_activities import (
     ListExploreActivitiesQuery,
     ListExploreActivitiesQueryHandler,
@@ -12,13 +12,13 @@ from app.modules.activities.application.use_cases.update_activity_capacity impor
     UpdateActivityCapacityUseCase,
 )
 from app.modules.activities.domain.entities.activity import Activity, ActivityStatus
-from app.modules.participations.application.queries.list_user_participations import (
-    ListUserParticipationsQuery,
-    ListUserParticipationsQueryHandler,
-)
 from app.modules.activities.domain.exceptions import (
     ActivityNotFoundException,
     CapacityLessThanRegisteredException,
+)
+from app.modules.participations.application.queries.list_user_participations import (
+    ListUserParticipationsQuery,
+    ListUserParticipationsQueryHandler,
 )
 from app.modules.participations.application.use_cases.join_activity import (
     JoinActivityCommand,
@@ -71,6 +71,7 @@ def test_join_activity_success():
 
     assert participation.activity_id == activity_id
     assert participation.user_id == user_id
+    act_repo.get_by_id.assert_called_once_with(activity_id, for_update=True)
     part_repo.save.assert_called_once()
     uow.commit.assert_called_once()
 
@@ -373,6 +374,7 @@ def test_update_activity_capacity_success():
     )
 
     assert updated.capacity == 6
+    act_repo.get_by_id.assert_called_once_with(activity_id, for_update=True)
     act_repo.save.assert_called_once_with(activity)
     uow.commit.assert_called_once()
 

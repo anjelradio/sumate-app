@@ -30,7 +30,9 @@ class SQLModelActivityRepository(ActivityRepository):
     def __init__(self, db: Session) -> None:
         self.db = db
 
-    def get_by_id(self, activity_id: UUID) -> Activity | None:
+    def get_by_id(
+        self, activity_id: UUID, for_update: bool = False
+    ) -> Activity | None:
         statement = (
             select(
                 ActivityModel,
@@ -43,6 +45,8 @@ class SQLModelActivityRepository(ActivityRepository):
                 ActivityModel.deleted_date.is_(None),
             )
         )
+        if for_update:
+            statement = statement.with_for_update(of=ActivityModel)
         result = self.db.exec(statement).first()
         if not result:
             return None
