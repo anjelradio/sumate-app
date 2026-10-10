@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from uuid import UUID
 
+from app.modules.activities.application.queries.list_causes import CauseDTO
 from app.modules.activities.domain.repositories.activity_repository import (
     ActivityRepository,
 )
@@ -18,6 +19,7 @@ class ActivityListItemDTO:
     status: str
     creator_name: str | None = None
     creator_image: str | None = None
+    causes: tuple[CauseDTO, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,6 +43,11 @@ class ListExploreActivitiesQueryHandler:
             min_date=now,
         )
 
+        activity_ids = [activity.id for activity in activities]
+        causes_by_activity = self.activity_repository.get_causes_for_activities(
+            activity_ids
+        )
+
         items = tuple(
             ActivityListItemDTO(
                 id=activity.id,
@@ -56,6 +63,10 @@ class ListExploreActivitiesQueryHandler:
                 ),
                 creator_name=activity.creator_name,
                 creator_image=activity.creator_image,
+                causes=tuple(
+                    CauseDTO(id=c.id, name=c.name, slug=c.slug)
+                    for c in causes_by_activity.get(activity.id, [])
+                ),
             )
             for activity in activities
         )

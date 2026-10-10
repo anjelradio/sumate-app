@@ -3,6 +3,7 @@ import { cache } from "react";
 import type {
   ActivityDetailData,
   ActivityListItem,
+  Cause,
   MyActivityListItem,
 } from "../../domain/entities/activity.entity";
 import { activityRepositoryImpl } from "../../infrastructure/repositories/activity.repository";
@@ -41,4 +42,15 @@ export const getActivityDetailQuery = cache(
     return response.data;
   }
 );
+
+export const listCausesQuery = cache(async (): Promise<Cause[]> => {
+  const response = await activityRepositoryImpl.listCauses();
+
+  if (!response.ok) {
+    throw new Error(response.errors?.[0] ?? "Error al cargar el catálogo de causas.");
+  }
+
+  return response.data;
+});
+
 

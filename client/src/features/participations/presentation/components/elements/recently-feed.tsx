@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Clock, Users } from "lucide-react";
+import { Clock, Tag, Users } from "lucide-react";
 import { ActivityCardShell } from "@/features/activities/presentation/components/elements/activity-card-shell";
 import {
   ActivitiesFilterBar,
@@ -73,6 +73,15 @@ export function RecentlyFeed({ participations }: RecentlyFeedProps) {
                   )
                 }
               >
+                <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
+                  <Tag className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <span className="truncate">
+                    {item.causes && item.causes.length > 0
+                      ? item.causes.map((cause) => cause.name).join(", ")
+                      : "Sin causas"}
+                  </span>
+                </div>
+
                 {item.creatorName && (
                   <p className="mt-1 text-xs text-slate-500">
                     Por <span className="font-semibold text-slate-700">{item.creatorName}</span>

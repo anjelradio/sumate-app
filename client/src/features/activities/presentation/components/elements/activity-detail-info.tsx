@@ -7,6 +7,7 @@ import { useActivityDetailUiStore } from "../../stores/activity-detail-ui.store"
 import { EditActivityTitleForm } from "../forms/edit-activity-title-form";
 import { EditActivityDateForm } from "../forms/edit-activity-date-form";
 import { EditActivityCapacityForm } from "../forms/edit-activity-capacity-form";
+import { EditActivityCausesForm } from "../forms/edit-activity-causes-form";
 
 type ActivityDetailInfoProps = {
   activity: ActivityDetailData;
@@ -274,6 +275,60 @@ export function ActivityDetailInfo({
                   aria-label="Editar cupos"
                   className={`p-1.5 rounded-full transition-all cursor-pointer ${
                     isOtherFieldActive("capacity")
+                      ? "opacity-30 cursor-not-allowed text-slate-300"
+                      : "text-slate-400 hover:text-[#6355de] hover:bg-slate-100"
+                  }`}
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Fila: Causas temáticas */}
+        {activeField === "causes" ? (
+          <EditActivityCausesForm
+            activityId={activityId}
+            initialCauses={activity.causes || []}
+            activityStatus={activity.status}
+            onCancel={() => setActiveField(null)}
+            onSuccess={() => setActiveField(null)}
+          />
+        ) : (
+          <div className="flex items-center justify-between pb-4 border-b border-slate-100/90">
+            <div className="flex items-center flex-1 mr-2">
+              <div className="shrink-0 flex items-center justify-center mr-6">
+                <Image
+                  src="/assets/icons/cause.webp"
+                  alt="Causas"
+                  width={34}
+                  height={34}
+                  unoptimized
+                  className="w-8 h-8 object-contain"
+                />
+              </div>
+              <div className="min-w-0 pr-2">
+                <p className="text-sm font-semibold text-slate-900 leading-tight">
+                  Causas temáticas
+                </p>
+                <p className="text-xs text-slate-500 font-medium mt-0.5">
+                  {activity.causes && activity.causes.length > 0
+                    ? activity.causes.map((cause) => cause.name).join(", ")
+                    : "Sin causas"}
+                </p>
+              </div>
+            </div>
+
+            {isOwner && isEditMode && (
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveField("causes")}
+                  disabled={isOtherFieldActive("causes")}
+                  aria-label="Editar causas"
+                  className={`p-1.5 rounded-full transition-all cursor-pointer ${
+                    isOtherFieldActive("causes")
                       ? "opacity-30 cursor-not-allowed text-slate-300"
                       : "text-slate-400 hover:text-[#6355de] hover:bg-slate-100"
                   }`}

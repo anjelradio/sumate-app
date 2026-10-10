@@ -16,6 +16,8 @@ import {
 import type {
   ActivityDetailData,
   ActivityListItem,
+  ActivitySearchParams,
+  Cause,
   MyActivityListItem,
 } from "../../domain/entities/activity.entity";
 import type { ActivityRepository } from "../../domain/repositories/activity.repository";
@@ -23,6 +25,7 @@ import { activityMapper } from "../mappers/activity.mapper";
 import {
   ActivityDetailDataResponseSchema,
   ActivityListResponseSchema,
+  CauseListResponseSchema,
   MyActivityListResponseSchema,
 } from "../schemas/activity.schemas";
 
@@ -37,6 +40,41 @@ export const activityRepositoryImpl: ActivityRepository = {
       responseSchema: ActivityListResponseSchema,
       mapData: activityMapper.toActivityList,
       fallbackMessage: "Error al cargar las actividades para explorar.",
+    });
+  },
+
+  async searchActivities(params?: ActivitySearchParams): Promise<ApiResult<ActivityListItem[]>> {
+    const searchParams = new URLSearchParams();
+    if (params?.q?.trim()) {
+      searchParams.set("q", params.q.trim());
+    }
+    if (params?.timeOfDay && params.timeOfDay !== "any") {
+      searchParams.set("time_of_day", params.timeOfDay);
+    }
+    if (params?.datePreset && params.datePreset !== "upcoming") {
+      searchParams.set("date_preset", params.datePreset);
+    }
+    if (params?.capacityRange && params.capacityRange !== "any") {
+      searchParams.set("capacity_range", params.capacityRange);
+    }
+    if (params?.causeIds && params.causeIds.length > 0) {
+      params.causeIds.forEach((id) => {
+        if (id && id !== "all") {
+          searchParams.append("cause_ids", id);
+        }
+      });
+    }
+
+    const queryString = searchParams.toString();
+    const url = queryString ? `${BASE_URL}/search?${queryString}` : `${BASE_URL}/search`;
+
+    return apiRequestData({
+      url,
+      method: "GET",
+      next: { revalidate: 0 },
+      responseSchema: ActivityListResponseSchema,
+      mapData: activityMapper.toActivityList,
+      fallbackMessage: "Error al realizar la búsqueda de actividades.",
     });
   },
 
@@ -59,6 +97,29 @@ export const activityRepositoryImpl: ActivityRepository = {
       responseSchema: ActivityDetailDataResponseSchema,
       mapData: activityMapper.toActivityDetailData,
       fallbackMessage: "Error al cargar el detalle de la actividad.",
+    });
+  },
+
+  async listCauses(): Promise<ApiResult<Cause[]>> {
+    return apiRequestData({
+      url: `${BASE_URL}/causes`,
+      method: "GET",
+      next: { revalidate: 300, tags: ["causes"] },
+      responseSchema: CauseListResponseSchema,
+      mapData: activityMapper.toCauseList,
+      fallbackMessage: "Error al cargar el catálogo de causas.",
+    });
+  },
+
+  async replaceActivityCauses(
+    id: string,
+    causeIds: string[]
+  ): Promise<ApiActionResult> {
+    return apiRequestStatus({
+      url: `${BASE_URL}/${id}/causes`,
+      method: "PUT",
+      body: { cause_ids: causeIds },
+      fallbackMessage: "Error al actualizar las causas de la actividad.",
     });
   },
 

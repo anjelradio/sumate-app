@@ -2,6 +2,10 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from uuid import UUID
 
+from app.modules.activities.application.queries.list_causes import CauseDTO
+from app.modules.activities.domain.repositories.activity_repository import (
+    ActivityRepository,
+)
 from app.modules.participations.domain.repositories.participation_repository import (
     ParticipationRepository,
 )
@@ -20,6 +24,7 @@ class ParticipatedActivityListItemDTO:
     is_past: bool
     creator_name: str | None = None
     creator_image: str | None = None
+    causes: tuple[CauseDTO, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,18 +38,35 @@ class UserParticipationsDTO:
 
 
 class ListUserParticipationsQueryHandler:
-    def __init__(self, participation_repository: ParticipationRepository) -> None:
+    def __init__(
+        self,
+        participation_repository: ParticipationRepository,
+        activity_repository: ActivityRepository | None = None,
+    ) -> None:
         self.participation_repository = participation_repository
+        self.activity_repository = activity_repository
 
     def execute(self, query: ListUserParticipationsQuery) -> UserParticipationsDTO:
         raw_items = self.participation_repository.list_user_participated_activities(
             query.user_id
         )
         now = datetime.now(timezone.utc)
+
+        activity_ids = [act.id for _, act, _, _, _ in raw_items]
+        causes_by_activity = (
+            self.activity_repository.get_causes_for_activities(activity_ids)
+            if self.activity_repository and activity_ids
+            else {}
+        )
+
         items: list[ParticipatedActivityListItemDTO] = []
         for part, act, enrolled_date, creator_name, creator_image in raw_items:
             act_date = act.date if act.date.tzinfo else act.date.replace(tzinfo=timezone.utc)
             is_past = act_date < now
+            causes_dtos = tuple(
+                CauseDTO(id=c.id, name=c.name, slug=c.slug)
+                for c in causes_by_activity.get(act.id, [])
+            )
             items.append(
                 ParticipatedActivityListItemDTO(
                     id=act.id,
@@ -58,6 +80,7 @@ class ListUserParticipationsQueryHandler:
                     is_past=is_past,
                     creator_name=creator_name,
                     creator_image=creator_image,
+                    causes=causes_dtos,
                 )
             )
 

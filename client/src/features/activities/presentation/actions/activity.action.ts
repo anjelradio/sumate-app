@@ -212,3 +212,22 @@ export async function deleteActivityAction(id: string): Promise<ApiActionResult>
   return result;
 }
 
+export async function replaceActivityCausesAction(
+  id: string,
+  causeIds: string[]
+): Promise<ApiActionResult> {
+  const result = await activityRepositoryImpl.replaceActivityCauses(id, causeIds);
+
+  if (result.ok) {
+    revalidatePath(`/activities/${id}`);
+    revalidatePath("/my-activities");
+    revalidatePath("/explore");
+    revalidatePath("/recently");
+    updateTag("activities");
+    updateTag(`activity-${id}`);
+  }
+
+  return result;
+}
+
+

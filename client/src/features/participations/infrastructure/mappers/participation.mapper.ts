@@ -4,6 +4,7 @@
  * Mapeador de DTOs de infraestructura a entidades de dominio.
  */
 
+import { activityMapper } from "@/features/activities/infrastructure/mappers/activity.mapper";
 import type { ParticipatedActivityListItem } from "../../domain/entities/participation.entity";
 import type {
   ParticipatedActivityItemResponse,
@@ -26,6 +27,7 @@ export const participationMapper = {
       isPast: dto.is_past,
       creatorName: dto.creator_name ?? undefined,
       creatorImage: dto.creator_image ?? undefined,
+      causes: (dto.causes ?? []).map(activityMapper.toCause),
     };
   },
 

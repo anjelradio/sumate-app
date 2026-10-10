@@ -4,6 +4,7 @@ from uuid import UUID
 
 from app.modules.activities.domain.entities.activity import Activity
 from app.modules.activities.domain.entities.activity_detail import ActivityDetail
+from app.modules.activities.domain.entities.cause import Cause
 
 
 class ActivityRepository(ABC):
@@ -22,6 +23,19 @@ class ActivityRepository(ABC):
         self,
         *,
         exclude_owner_id: str,
+        min_date: datetime,
+    ) -> list[Activity]:
+        ...
+
+    @abstractmethod
+    def search_activities(
+        self,
+        *,
+        query: str | None = None,
+        time_of_day: str | None = None,
+        date_preset: str | None = None,
+        capacity_range: str | None = None,
+        cause_ids: tuple[UUID, ...] = (),
         min_date: datetime,
     ) -> list[Activity]:
         ...
@@ -46,6 +60,22 @@ class ActivityRepository(ABC):
     def get_detail_by_activity_id(
         self, activity_id: UUID
     ) -> tuple[Activity, ActivityDetail | None] | None:
+        ...
+
+    @abstractmethod
+    def get_causes_by_activity_id(self, activity_id: UUID) -> list[Cause]:
+        ...
+
+    @abstractmethod
+    def get_causes_for_activities(
+        self, activity_ids: list[UUID]
+    ) -> dict[UUID, list[Cause]]:
+        ...
+
+    @abstractmethod
+    def replace_activity_causes(
+        self, activity_id: UUID, cause_ids: list[UUID]
+    ) -> None:
         ...
 
     @abstractmethod

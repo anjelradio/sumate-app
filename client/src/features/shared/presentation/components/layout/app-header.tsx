@@ -48,6 +48,7 @@ export function AppHeader() {
         {/* Buscador simulado como botón centrado */}
         <button
           type="button"
+          onClick={() => router.push("/search")}
           aria-label="Buscar actividades"
           className="relative flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-200/80 rounded-2xl text-sm text-slate-400 shadow-sm hover:border-slate-300 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-black/10"
         >

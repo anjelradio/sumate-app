@@ -9,6 +9,7 @@ import type {
   ActivityDetail,
   ActivityDetailData,
   ActivityListItem,
+  Cause,
   MyActivityListItem,
 } from "../../domain/entities/activity.entity";
 import type {
@@ -16,11 +17,25 @@ import type {
   ActivityDetailResponse,
   ActivityListItemResponse,
   ActivityListResponse,
+  CauseListResponse,
+  CauseResponse,
   MyActivityListItemResponse,
   MyActivityListResponse,
 } from "../schemas/activity.schemas";
 
 export const activityMapper = {
+  toCause(dto: CauseResponse): Cause {
+    return {
+      id: dto.id,
+      name: dto.name,
+      slug: dto.slug,
+    };
+  },
+
+  toCauseList(dto: CauseListResponse): Cause[] {
+    return dto.items.map(activityMapper.toCause);
+  },
+
   toActivityListItem(dto: ActivityListItemResponse): ActivityListItem {
     return {
       id: dto.id,
@@ -32,6 +47,7 @@ export const activityMapper = {
       status: dto.status,
       creatorName: dto.creator_name ?? undefined,
       creatorImage: dto.creator_image ?? undefined,
+      causes: (dto.causes ?? []).map(activityMapper.toCause),
     };
   },
 
@@ -82,6 +98,7 @@ export const activityMapper = {
         image: p.image ?? null,
       })),
       detail: activityMapper.toActivityDetail(dto.detail),
+      causes: (dto.causes ?? []).map(activityMapper.toCause),
     };
   },
 };

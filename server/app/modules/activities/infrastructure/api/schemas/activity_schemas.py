@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from enum import Enum
 from typing import Annotated
 from uuid import UUID
 
@@ -6,6 +7,37 @@ from fastapi import Form
 from sqlmodel import Field, SQLModel
 
 from app.modules.activities.domain.exceptions import InvalidActivityDateException
+from app.modules.activities.infrastructure.api.schemas.cause_schemas import (
+    CauseListRead,
+    CauseRead,
+    ReplaceActivityCausesRequest,
+)
+
+
+class TimeOfDayFilter(str, Enum):
+    any = "any"
+    early_morning = "early_morning"
+    morning = "morning"
+    afternoon = "afternoon"
+    night = "night"
+
+
+class DatePresetFilter(str, Enum):
+    upcoming = "upcoming"
+    starting_soon = "starting_soon"
+    today = "today"
+    tomorrow = "tomorrow"
+    this_weekend = "this_weekend"
+    next_week = "next_week"
+    next_weekend = "next_weekend"
+
+
+class CapacityRangeFilter(str, Enum):
+    any = "any"
+    one_to_nine = "1-9"
+    ten_to_twenty = "10-20"
+    gt_twenty = "gt-20"
+
 
 
 class CreateActivityRequest(SQLModel):
@@ -48,6 +80,7 @@ class ActivityListItemRead(SQLModel):
     status: str
     creator_name: str | None = None
     creator_image: str | None = None
+    causes: list[CauseRead] = []
 
 
 class ActivityListRead(SQLModel):
@@ -65,6 +98,7 @@ class MyActivityListItemRead(SQLModel):
     registered_count: int
     creator_name: str | None = None
     creator_image: str | None = None
+    causes: list[CauseRead] = []
 
 
 class MyActivityListRead(SQLModel):
@@ -101,6 +135,7 @@ class ActivityDetailRead(SQLModel):
     is_participating: bool = False
     participants: list[ActivityParticipantRead] = []
     detail: ActivityDetailDataRead | None = None
+    causes: list[CauseRead] = []
 
 
 class UpdateLocationRequest(SQLModel):

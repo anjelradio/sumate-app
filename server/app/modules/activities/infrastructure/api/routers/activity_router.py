@@ -6,6 +6,9 @@ from app.modules.activities.application.queries.get_activity_detail import (
     GetActivityDetailQuery,
     GetActivityDetailQueryHandler,
 )
+from app.modules.activities.application.queries.list_causes import (
+    ListCausesQueryHandler,
+)
 from app.modules.activities.application.queries.list_explore_activities import (
     ListExploreActivitiesQuery,
     ListExploreActivitiesQueryHandler,
@@ -14,13 +17,13 @@ from app.modules.activities.application.queries.list_my_activities import (
     ListMyActivitiesQuery,
     ListMyActivitiesQueryHandler,
 )
+from app.modules.activities.application.queries.search_activities import (
+    SearchActivitiesQuery,
+    SearchActivitiesQueryHandler,
+)
 from app.modules.activities.application.use_cases.close_activity import (
     CloseActivityCommand,
     CloseActivityUseCase,
-)
-from app.modules.activities.application.use_cases.reopen_activity import (
-    ReopenActivityCommand,
-    ReopenActivityUseCase,
 )
 from app.modules.activities.application.use_cases.create_activity import (
     CreateActivityCommand,
@@ -33,6 +36,14 @@ from app.modules.activities.application.use_cases.delete_activity import (
 from app.modules.activities.application.use_cases.publish_activity import (
     PublishActivityCommand,
     PublishActivityUseCase,
+)
+from app.modules.activities.application.use_cases.reopen_activity import (
+    ReopenActivityCommand,
+    ReopenActivityUseCase,
+)
+from app.modules.activities.application.use_cases.replace_activity_causes import (
+    ReplaceActivityCausesCommand,
+    ReplaceActivityCausesUseCase,
 )
 from app.modules.activities.application.use_cases.update_activity_capacity import (
     UpdateActivityCapacityCommand,
@@ -61,9 +72,15 @@ from app.modules.activities.infrastructure.api.schemas.activity_schemas import (
     ActivityListItemRead,
     ActivityListRead,
     ActivityParticipantRead,
+    CapacityRangeFilter,
+    CauseListRead,
+    CauseRead,
     CreateActivityRequest,
+    DatePresetFilter,
     MyActivityListItemRead,
     MyActivityListRead,
+    ReplaceActivityCausesRequest,
+    TimeOfDayFilter,
     UpdateActivityCapacityRequest,
     UpdateActivityInfoRequest,
     UpdateDescriptionRequest,
@@ -75,10 +92,13 @@ from app.modules.activities.infrastructure.external.cloudinary_service import (
 from app.modules.activities.infrastructure.persistence.repositories.sqlmodel_activity_repository import (
     SQLModelActivityRepository,
 )
+from app.modules.activities.infrastructure.persistence.repositories.sqlmodel_cause_repository import (
+    SQLModelCauseRepository,
+)
 from app.modules.participations.infrastructure.persistence.repositories.sqlmodel_participation_repository import (
     SQLModelParticipationRepository,
 )
-from fastapi import APIRouter, Depends, File, Response, UploadFile, status
+from fastapi import APIRouter, Depends, File, Query, Response, UploadFile, status
 
 router = APIRouter(prefix="/activities", tags=["Actividades"])
 
@@ -112,6 +132,25 @@ async def create_activity(
 
 
 @router.get(
+    "/causes",
+    response_model=CauseListRead,
+    summary="Listar catálogo de causas temáticas",
+)
+def list_causes(
+    db: DBSession,
+) -> CauseListRead:
+    repository = SQLModelCauseRepository(db)
+    handler = ListCausesQueryHandler(repository)
+    dto = handler.execute()
+    return CauseListRead(
+        items=[
+            CauseRead(id=c.id, name=c.name, slug=c.slug)
+            for c in dto.items
+        ]
+    )
+
+
+@router.get(
     "/explore",
     response_model=ActivityListRead,
     summary="Listar actividades para explorar",
@@ -140,6 +179,10 @@ def list_explore_activities(
                 status=item.status,
                 creator_name=item.creator_name,
                 creator_image=item.creator_image,
+                causes=[
+                    CauseRead(id=c.id, name=c.name, slug=c.slug)
+                    for c in item.causes
+                ],
             )
             for item in dto.items
         ]
@@ -176,6 +219,57 @@ def list_my_activities(
                 registered_count=item.registered_count,
                 creator_name=item.creator_name,
                 creator_image=item.creator_image,
+                causes=[
+                    CauseRead(id=c.id, name=c.name, slug=c.slug)
+                    for c in item.causes
+                ],
+            )
+            for item in dto.items
+        ]
+    )
+
+
+@router.get(
+    "/search",
+    response_model=ActivityListRead,
+    summary="Buscar actividades con filtros avanzados",
+)
+def search_activities(
+    db: DBSession,
+    q: Annotated[str | None, Query(description="Término de búsqueda por nombre de la actividad")] = None,
+    time_of_day: Annotated[TimeOfDayFilter, Query(description="Filtro de momento del día")] = TimeOfDayFilter.any,
+    date_preset: Annotated[DatePresetFilter, Query(description="Filtro de temporalidad de fecha")] = DatePresetFilter.upcoming,
+    capacity_range: Annotated[CapacityRangeFilter, Query(description="Filtro de plazas/cupos totales configurados")] = CapacityRangeFilter.any,
+    cause_ids: Annotated[list[UUID], Query(description="Lista de IDs de causas para filtrar")] = [],
+) -> ActivityListRead:
+    repository = SQLModelActivityRepository(db)
+    handler = SearchActivitiesQueryHandler(repository)
+    dto = handler.execute(
+        SearchActivitiesQuery(
+            query=q,
+            time_of_day=time_of_day.value if time_of_day else None,
+            date_preset=date_preset.value if date_preset else None,
+            capacity_range=capacity_range.value if capacity_range else None,
+            cause_ids=tuple(cause_ids),
+        )
+    )
+
+    return ActivityListRead(
+        items=[
+            ActivityListItemRead(
+                id=item.id,
+                name=item.name,
+                image_url=item.image_url,
+                date=item.date,
+                owner_id=item.owner_id,
+                capacity=item.capacity,
+                status=item.status,
+                creator_name=item.creator_name,
+                creator_image=item.creator_image,
+                causes=[
+                    CauseRead(id=c.id, name=c.name, slug=c.slug)
+                    for c in item.causes
+                ],
             )
             for item in dto.items
         ]
@@ -226,6 +320,15 @@ def get_activity_detail(
         for p in dto.participants
     ]
 
+    causes_data = [
+        CauseRead(
+            id=c.id,
+            name=c.name,
+            slug=c.slug,
+        )
+        for c in dto.causes
+    ]
+
     return ActivityDetailRead(
         id=dto.id,
         name=dto.name,
@@ -240,6 +343,7 @@ def get_activity_detail(
         is_participating=dto.is_participating,
         participants=participants_data,
         detail=detail_data,
+        causes=causes_data,
     )
 
 
@@ -363,6 +467,34 @@ def update_activity_capacity(
             activity_id=activity_id,
             owner_id=current_user.user_id,
             capacity=payload.capacity,
+        )
+    )
+    return Response(status_code=status.HTTP_200_OK)
+
+
+@router.put(
+    "/{activity_id}/causes",
+    status_code=status.HTTP_200_OK,
+    summary="Asignar o actualizar causas asociadas a una actividad",
+)
+def replace_activity_causes(
+    activity_id: UUID,
+    payload: ReplaceActivityCausesRequest,
+    current_user: CurrentUser,
+    uow: UoWDep,
+) -> Response:
+    activity_repo = SQLModelActivityRepository(uow.session)
+    cause_repo = SQLModelCauseRepository(uow.session)
+    use_case = ReplaceActivityCausesUseCase(
+        activity_repository=activity_repo,
+        cause_repository=cause_repo,
+        uow=uow,
+    )
+    use_case.execute(
+        ReplaceActivityCausesCommand(
+            activity_id=activity_id,
+            owner_id=current_user.user_id,
+            cause_ids=payload.cause_ids,
         )
     )
     return Response(status_code=status.HTTP_200_OK)

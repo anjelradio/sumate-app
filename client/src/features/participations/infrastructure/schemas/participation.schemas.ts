@@ -5,6 +5,7 @@
  */
 
 import { z } from "zod";
+import { CauseResponseSchema } from "@/features/activities/infrastructure/schemas/activity.schemas";
 
 export const ParticipatedActivityItemResponseSchema = z.object({
   id: z.string(),
@@ -18,6 +19,7 @@ export const ParticipatedActivityItemResponseSchema = z.object({
   is_past: z.boolean(),
   creator_name: z.string().nullable().optional(),
   creator_image: z.string().nullable().optional(),
+  causes: z.array(CauseResponseSchema).optional().default([]),
 });
 
 export const ParticipatedActivityListResponseSchema = z.object({

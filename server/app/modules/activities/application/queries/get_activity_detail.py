@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from uuid import UUID
 
+from app.modules.activities.application.queries.list_causes import CauseDTO
 from app.modules.activities.domain.exceptions import ActivityNotFoundException
 from app.modules.activities.domain.repositories.activity_repository import (
     ActivityRepository,
@@ -50,6 +51,7 @@ class ActivityDetailDTO:
     is_participating: bool = False
     participants: list[ActivityParticipantDetailDTO] = field(default_factory=list)
     detail: ActivityDetailDataDTO | None = None
+    causes: tuple[CauseDTO, ...] = ()
 
 
 class GetActivityDetailQueryHandler:
@@ -112,6 +114,12 @@ class GetActivityDetailQueryHandler:
             else None
         )
 
+        causes_entities = self.activity_repository.get_causes_by_activity_id(activity.id)
+        causes_dtos = tuple(
+            CauseDTO(id=c.id, name=c.name, slug=c.slug)
+            for c in causes_entities
+        )
+
         is_owner = bool(query.current_user_id and activity.owner_id == query.current_user_id)
 
         return ActivityDetailDTO(
@@ -128,4 +136,5 @@ class GetActivityDetailQueryHandler:
             is_participating=is_participating,
             participants=participants,
             detail=detail_dto,
+            causes=causes_dtos,
         )

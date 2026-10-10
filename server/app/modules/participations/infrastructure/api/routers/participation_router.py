@@ -38,7 +38,8 @@ def list_my_participations(
     db: DBSession,
 ) -> ParticipatedActivityListRead:
     participation_repo = SQLModelParticipationRepository(db)
-    handler = ListUserParticipationsQueryHandler(participation_repo)
+    activity_repo = SQLModelActivityRepository(db)
+    handler = ListUserParticipationsQueryHandler(participation_repo, activity_repo)
     dto = handler.execute(ListUserParticipationsQuery(user_id=current_user.user_id))
     return ParticipatedActivityListRead(
         items=[
@@ -54,6 +55,10 @@ def list_my_participations(
                 is_past=item.is_past,
                 creator_name=item.creator_name,
                 creator_image=item.creator_image,
+                causes=[
+                    CauseRead(id=c.id, name=c.name, slug=c.slug)
+                    for c in item.causes
+                ],
             )
             for item in dto.items
         ]

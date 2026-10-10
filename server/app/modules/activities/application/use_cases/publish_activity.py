@@ -60,6 +60,10 @@ class PublishActivityUseCase:
         if not detail or not detail.description or not detail.description.strip():
             missing_fields.append("descripción")
 
+        causes = self.activity_repository.get_causes_by_activity_id(activity.id)
+        if not causes:
+            missing_fields.append("al menos una causa temática")
+
         if missing_fields:
             fields_str = ", ".join(missing_fields)
             raise ValidationException(

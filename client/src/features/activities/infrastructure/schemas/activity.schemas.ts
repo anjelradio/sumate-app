@@ -6,6 +6,16 @@
 
 import { z } from "zod";
 
+export const CauseResponseSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  slug: z.string(),
+});
+
+export const CauseListResponseSchema = z.object({
+  items: z.array(CauseResponseSchema),
+});
+
 export const ActivityListItemResponseSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -16,6 +26,7 @@ export const ActivityListItemResponseSchema = z.object({
   status: z.enum(["draft", "active", "closed"]),
   creator_name: z.string().nullable().optional(),
   creator_image: z.string().nullable().optional(),
+  causes: z.array(CauseResponseSchema).optional().default([]),
 });
 
 export const ActivityListResponseSchema = z.object({
@@ -60,8 +71,11 @@ export const ActivityDetailDataResponseSchema = z.object({
   is_participating: z.boolean().optional().default(false),
   participants: z.array(ActivityParticipantResponseSchema).optional().default([]),
   detail: ActivityDetailResponseSchema.nullable().optional(),
+  causes: z.array(CauseResponseSchema).optional().default([]),
 });
 
+export type CauseResponse = z.infer<typeof CauseResponseSchema>;
+export type CauseListResponse = z.infer<typeof CauseListResponseSchema>;
 export type ActivityParticipantResponse = z.infer<typeof ActivityParticipantResponseSchema>;
 export type ActivityListItemResponse = z.infer<typeof ActivityListItemResponseSchema>;
 export type ActivityListResponse = z.infer<typeof ActivityListResponseSchema>;
@@ -142,3 +156,39 @@ export const EditDescriptionSchema = z.object({
     .max(5000, "La descripción no puede superar los 5,000 caracteres."),
 });
 export type EditDescriptionFormData = z.infer<typeof EditDescriptionSchema>;
+
+export const TimeOfDayFilterSchema = z.enum([
+  "any",
+  "early_morning",
+  "morning",
+  "afternoon",
+  "night",
+]);
+
+export const DatePresetFilterSchema = z.enum([
+  "upcoming",
+  "starting_soon",
+  "today",
+  "tomorrow",
+  "this_weekend",
+  "next_week",
+  "next_weekend",
+]);
+
+export const CapacityRangeFilterSchema = z.enum([
+  "any",
+  "1-9",
+  "10-20",
+  "gt-20",
+]);
+
+export const ActivitySearchParamsSchema = z.object({
+  q: z.string().optional(),
+  time_of_day: TimeOfDayFilterSchema.optional(),
+  date_preset: DatePresetFilterSchema.optional(),
+  capacity_range: CapacityRangeFilterSchema.optional(),
+  cause_ids: z.array(z.string()).optional(),
+});
+
+export type ActivitySearchParamsInput = z.infer<typeof ActivitySearchParamsSchema>;
+

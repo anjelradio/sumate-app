@@ -12,6 +12,8 @@ import type {
 import type {
   ActivityDetailData,
   ActivityListItem,
+  ActivitySearchParams,
+  Cause,
   MyActivityListItem,
 } from "../entities/activity.entity";
 
@@ -22,6 +24,11 @@ export interface ActivityRepository {
   listExplore(): Promise<ApiResult<ActivityListItem[]>>;
 
   /**
+   * Busca actividades según criterios de texto, fecha, hora, cupos y causas.
+   */
+  searchActivities(params?: ActivitySearchParams): Promise<ApiResult<ActivityListItem[]>>;
+
+  /**
    * Obtiene la lista de actividades creadas por el usuario con conteo de inscritos.
    */
   listMyActivities(): Promise<ApiResult<MyActivityListItem[]>>;
@@ -30,6 +37,19 @@ export interface ActivityRepository {
    * Obtiene el detalle completo de una actividad por su ID.
    */
   getActivityDetail(id: string): Promise<ApiResult<ActivityDetailData>>;
+
+  /**
+   * Obtiene el catálogo completo de causas disponibles.
+   */
+  listCauses(): Promise<ApiResult<Cause[]>>;
+
+  /**
+   * Reemplaza la lista de causas asignadas a una actividad.
+   */
+  replaceActivityCauses(
+    id: string,
+    causeIds: string[]
+  ): Promise<ApiActionResult>;
 
   /**
    * Registra una nueva actividad enviando los datos multipart (imagen, nombre y fecha).

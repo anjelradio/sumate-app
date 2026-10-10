@@ -6,7 +6,8 @@ export type EditableField =
   | "date"
   | "capacity"
   | "location"
-  | "description";
+  | "description"
+  | "causes";
 
 interface ActivityDetailUiState {
   isEditMode: boolean;

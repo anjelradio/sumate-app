@@ -7,6 +7,12 @@
 
 export type ActivityStatus = "draft" | "active" | "closed";
 
+export type Cause = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
 export type Activity = {
   id: string;
   name: string;
@@ -30,7 +36,9 @@ export type ActivityListItem = Pick<
   | "status"
   | "creatorName"
   | "creatorImage"
->;
+> & {
+  causes?: Cause[];
+};
 
 export type MyActivityListItem = ActivityListItem & {
   registeredCount: number;
@@ -57,6 +65,45 @@ export type ActivityDetailData = Activity & {
   isParticipating?: boolean;
   participants: ActivityParticipant[];
   detail: ActivityDetail | null;
+  causes: Cause[];
 };
 
 export type ActivityScope = "mine" | "others";
+
+export type TimeOfDayFilter =
+  | "any"
+  | "early_morning"
+  | "morning"
+  | "afternoon"
+  | "night";
+
+export type DatePresetFilter =
+  | "upcoming"
+  | "starting_soon"
+  | "today"
+  | "tomorrow"
+  | "this_weekend"
+  | "next_week"
+  | "next_weekend";
+
+export type CapacityRangeFilter =
+  | "any"
+  | "1-9"
+  | "10-20"
+  | "gt-20";
+
+export interface SearchFilterState {
+  timeOfDay: TimeOfDayFilter;
+  datePreset: DatePresetFilter;
+  capacityRange: CapacityRangeFilter;
+  causeIds: string[];
+}
+
+export interface ActivitySearchParams {
+  q?: string;
+  timeOfDay?: TimeOfDayFilter;
+  datePreset?: DatePresetFilter;
+  capacityRange?: CapacityRangeFilter;
+  causeIds?: string[];
+}
+

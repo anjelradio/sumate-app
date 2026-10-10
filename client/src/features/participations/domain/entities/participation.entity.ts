@@ -4,6 +4,8 @@
  * Entidades y tipos de dominio para el módulo de participaciones.
  */
 
+import type { Cause } from "@/features/activities/domain/entities/activity.entity";
+
 export type Participation = {
   id: string;
   activityId: string;
@@ -23,6 +25,7 @@ export type ParticipatedActivityListItem = {
   isPast: boolean;
   creatorName?: string;
   creatorImage?: string;
+  causes?: Cause[];
 };
 
 export type ParticipationFilter = "all" | "upcoming" | "past";

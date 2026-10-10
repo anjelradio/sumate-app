@@ -1,54 +1,48 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 
 from app.modules.activities.application.queries.list_causes import CauseDTO
+from app.modules.activities.application.queries.list_explore_activities import (
+    ActivityListDTO,
+    ActivityListItemDTO,
+)
 from app.modules.activities.domain.repositories.activity_repository import (
     ActivityRepository,
 )
 
 
 @dataclass(frozen=True, slots=True)
-class ListMyActivitiesQuery:
-    current_user_id: str
+class SearchActivitiesQuery:
+    query: str | None = None
+    time_of_day: str | None = None
+    date_preset: str | None = None
+    capacity_range: str | None = None
+    cause_ids: tuple[UUID, ...] = ()
 
 
-@dataclass(frozen=True, slots=True)
-class MyActivityListItemDTO:
-    id: UUID
-    name: str
-    image_url: str
-    date: datetime
-    owner_id: str
-    capacity: int
-    status: str
-    registered_count: int
-    creator_name: str | None = None
-    creator_image: str | None = None
-    causes: tuple[CauseDTO, ...] = ()
-
-
-@dataclass(frozen=True, slots=True)
-class MyActivityListDTO:
-    items: tuple[MyActivityListItemDTO, ...]
-
-
-class ListMyActivitiesQueryHandler:
+class SearchActivitiesQueryHandler:
     def __init__(self, activity_repository: ActivityRepository) -> None:
         self.activity_repository = activity_repository
 
-    def execute(self, query: ListMyActivitiesQuery) -> MyActivityListDTO:
-        results = self.activity_repository.list_my_activities(
-            owner_id=query.current_user_id,
+    def execute(self, query: SearchActivitiesQuery) -> ActivityListDTO:
+        now = datetime.now(timezone.utc)
+        activities = self.activity_repository.search_activities(
+            query=query.query,
+            time_of_day=query.time_of_day,
+            date_preset=query.date_preset,
+            capacity_range=query.capacity_range,
+            cause_ids=query.cause_ids,
+            min_date=now,
         )
 
-        activity_ids = [act.id for act, _ in results]
+        activity_ids = [activity.id for activity in activities]
         causes_by_activity = self.activity_repository.get_causes_for_activities(
             activity_ids
         )
 
         items = tuple(
-            MyActivityListItemDTO(
+            ActivityListItemDTO(
                 id=activity.id,
                 name=activity.name,
                 image_url=activity.image_url,
@@ -60,7 +54,6 @@ class ListMyActivitiesQueryHandler:
                     if hasattr(activity.status, "value")
                     else str(activity.status)
                 ),
-                registered_count=registered_count,
                 creator_name=activity.creator_name,
                 creator_image=activity.creator_image,
                 causes=tuple(
@@ -68,6 +61,7 @@ class ListMyActivitiesQueryHandler:
                     for c in causes_by_activity.get(activity.id, [])
                 ),
             )
-            for activity, registered_count in results
+            for activity in activities
         )
-        return MyActivityListDTO(items=items)
+
+        return ActivityListDTO(items=items)

@@ -1,6 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
+from app.modules.activities.infrastructure.api.schemas.cause_schemas import CauseRead
 from sqlmodel import SQLModel
 
 
@@ -16,6 +17,7 @@ class ParticipatedActivityItemRead(SQLModel):
     is_past: bool
     creator_name: str | None = None
     creator_image: str | None = None
+    causes: list[CauseRead] = []
 
 
 class ParticipatedActivityListRead(SQLModel):
